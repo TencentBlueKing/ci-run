@@ -1,0 +1,17 @@
+.idea/
+.gradle/
+build/
+target/
+out/
+release/
+reports/
+*.iml
+.DS_Store
+*.log
+gradle/
+gradlew
+gradlew.bat
+version.txt
+build.yml
+.codecc
+task.json

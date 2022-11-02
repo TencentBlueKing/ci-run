@@ -1,0 +1,86 @@
+{
+  "atomCode": "run",
+  "execution": {
+    "packagePath": "run-jar-with-dependencies.jar",
+    "language": "java",
+    "minimumVersion": "1.8",
+    "demands": [],
+    "target": "java -jar run-jar-with-dependencies.jar"
+  },
+  "input": {
+    "shell": {
+      "rule": {},
+      "type": "enum-input",
+      "label": "指定脚本语言",
+      "desc": "指定脚本语言，默认时Windows执行Batch，Linux和Macos执行Shell。",
+      "required": false,
+      "hidden": false,
+      "component": "enum-input",
+      "list": [
+        {
+          "value": "auto",
+          "label": "默认"
+        },{
+          "value": "bash",
+          "label": "BASH"
+        },
+        {
+          "value": "cmd",
+          "label": "CMD"
+        },
+        {
+          "value": "pwsh",
+          "label": "POWERSHELL_CORE"
+        },
+        {
+          "value": "powershell",
+          "label": "POWERSHELL_DESKTOP"
+        },
+        {
+          "value": "python",
+          "label": "PYTHON"
+        },
+        {
+          "value": "sh",
+          "label": "SH"
+        }
+      ],
+      "default": "auto"
+    },
+    "script": {
+      "label": "执行脚本",
+      "default": "",
+      "placeholder": "输入脚本",
+      "type": "atom-ace-editor",
+      "desc": "输入脚本",
+      "required": true,
+      "disabled": false,
+      "hidden": false,
+      "isSensitive": false
+    },
+    "charsetType": {
+      "rule": {},
+      "type": "enum-input",
+      "label": "windows下字符集类型",
+      "desc": "仅windows构建机所需参数",
+      "required": false,
+      "hidden": false,
+      "component": "enum-input",
+      "list": [
+        {
+          "value": "DEFAULT",
+          "label": "DEFAULT"
+        },
+        {
+          "value": "UTF_8",
+          "label": "UTF-8"
+        },
+        {
+          "value": "GBK",
+          "label": "GBK"
+        }
+      ],
+      "default": "DEFAULT"
+    }
+  }
+}
