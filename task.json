@@ -7,19 +7,47 @@
     "demands": [],
     "target": "java -jar run-jar-with-dependencies.jar"
   },
+  "releaseInfo": {
+    "projectId": "Demo",
+    "name": "RunScript",
+    "language": "java",
+    "logoUrl": "${{indexFile(\"logo.png\")}}",
+    "category": "TASK",
+    "classifyCode": "compileBuild",
+    "jobType": "AGENT",
+    "os": [
+      "LINUX",
+      "MACOS",
+      "WINDOWS"
+    ],
+    "labelCodes": [
+
+    ],
+    "summary": "Execute the script plugin. Support cross-system use.",
+    "description": "${{indexFile(\"README_EN.md\")}}",
+    "configInfo": {
+      "frontendType": "NORMAL"
+    },
+    "versionInfo": {
+      "publisher": "admin",
+      "releaseType": "NEW",
+      "version": "1.0.0",
+      "versionContent": "init"
+    }
+  },
   "input": {
     "shell": {
       "rule": {},
       "type": "enum-input",
-      "label": "指定脚本语言",
-      "desc": "指定脚本语言，默认时Windows执行Batch，Linux和Macos执行Shell。",
+      "label": "Set script type",
+      "desc": "Set the script type. By default, Windows executes Batch. Linux and Macos execute Shell.",
       "required": false,
       "hidden": false,
       "component": "enum-input",
       "list": [
         {
           "value": "auto",
-          "label": "默认"
+          "label": "by default"
         },{
           "value": "bash",
           "label": "BASH"
@@ -48,11 +76,11 @@
       "default": "auto"
     },
     "script": {
-      "label": "执行脚本",
+      "label": "script",
       "default": "",
-      "placeholder": "输入脚本",
+      "placeholder": "Please enter script",
       "type": "atom-ace-editor",
-      "desc": "输入脚本",
+      "desc": "Please enter script",
       "required": true,
       "disabled": false,
       "hidden": false,
@@ -61,8 +89,8 @@
     "charsetType": {
       "rule": {},
       "type": "enum-input",
-      "label": "windows下字符集类型",
-      "desc": "仅windows构建机所需参数",
+      "label": "Charset type under windows",
+      "desc": "windows only",
       "required": false,
       "hidden": false,
       "component": "enum-input",

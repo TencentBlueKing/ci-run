@@ -6,7 +6,7 @@
 
     <groupId>com.tencent.devops.ci-plugins</groupId>
     <artifactId>run</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.2</version>
 
     <properties>
         <!-- 引用的sdk版本，当sdk版本有升级时再修改 -->
@@ -98,6 +98,26 @@
                                 <sourceDir>${project.basedir}/src/test/java</sourceDir>
                             </sourceDirs>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.2.1</version>
+                <configuration>
+                    <finalName>run</finalName>
+                    <descriptors>
+                        <descriptor>assembly/assembly.xml</descriptor>
+                    </descriptors>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
