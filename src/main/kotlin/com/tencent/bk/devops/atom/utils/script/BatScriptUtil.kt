@@ -31,20 +31,22 @@ import com.tencent.bk.devops.atom.enums.CharsetType
 import com.tencent.bk.devops.atom.utils.CommandLineUtils
 import com.tencent.bk.devops.atom.utils.CommonUtil
 import com.tencent.bk.devops.atom.utils.ScriptEnvUtils
+import org.apache.commons.exec.CommandLine
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.charset.Charset
+import java.nio.file.Files
 
 object BatScriptUtil {
 
-    //
+    // 
     private const val setEnv = ":setEnv\r\n" +
         "    set file_save_dir=\"##resultFile##\"\r\n" +
         "    echo %~1=%~2 >>%file_save_dir%\r\n" +
         "    set %~1=%~2\r\n" +
         "    goto:eof\r\n"
 
-    //
+    // 
     private const val setGateValue = ":setGateValue\r\n" +
         "    set file_save_dir=\"##gateValueFile##\"\r\n" +
         "    echo %~1=%~2 >>%file_save_dir%\r\n" +
@@ -89,8 +91,9 @@ object BatScriptUtil {
                 charsetType = charsetType,
                 paramClassName = paramClassName
             )
+            val command = "cmd.exe /C \"${file.canonicalPath}\""
             return CommandLineUtils.execute(
-                command = "cmd.exe /C \"${file.canonicalPath}\"",
+                cmdLine = CommandLine.parse(command),
                 workspace = dir,
                 print2Logger = print2Logger,
                 prefix = prefix,
@@ -116,13 +119,7 @@ object BatScriptUtil {
         paramClassName: List<String>,
         charsetType: CharsetType? = null
     ): File {
-        val tmpDir = System.getProperty("java.io.tmpdir")
-        val file = if (tmpDir.isNullOrBlank()) {
-            File.createTempFile("paas_build_script_", ".bat")
-        } else {
-            File(tmpDir).mkdirs()
-            File.createTempFile("paas_build_script_", ".bat", File(tmpDir))
-        }
+        val file = Files.createTempFile(CommonUtil.getTmpDir(), "paas_build_script_", ".bat").toFile()
         file.deleteOnExit()
 
         val command = StringBuilder()
@@ -134,7 +131,7 @@ object BatScriptUtil {
             .append("\r\n")
 
         runtimeVariables
-//            .plus(CommonEnv.getCommonEnv()) //
+//            .plus(CommonEnv.getCommonEnv()) // 
             .filterNot { specialEnv(it.key, it.value) || it.key in paramClassName }
             .forEach { (name, value) ->
                 // 特殊保留字符转义

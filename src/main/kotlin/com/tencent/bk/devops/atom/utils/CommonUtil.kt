@@ -28,7 +28,11 @@
 package com.tencent.bk.devops.atom.utils
 
 import org.slf4j.LoggerFactory
+import sun.security.action.GetPropertyAction
 import java.io.File
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.security.AccessController
 
 object CommonUtil {
 
@@ -42,4 +46,6 @@ object CommonUtil {
         logger.debug("canExecute/canRead/canWrite: ${file.canExecute()}/${file.canRead()}/${file.canWrite()}")
         logger.debug("--------file debug info end-------------")
     }
+
+    fun getTmpDir(): Path = Paths.get(AccessController.doPrivileged(GetPropertyAction("user.dir")))
 }

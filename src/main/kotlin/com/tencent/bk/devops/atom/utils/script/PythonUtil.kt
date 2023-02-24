@@ -36,6 +36,8 @@ import com.tencent.bk.devops.atom.utils.CommandLineUtils
 import com.tencent.bk.devops.atom.utils.CommonUtil
 import com.tencent.bk.devops.atom.utils.ScriptEnvUtils
 import com.tencent.bk.devops.atom.utils.getEnvironmentPathPrefix
+import org.apache.commons.exec.CommandLine
+import org.apache.commons.text.StringEscapeUtils
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.charset.Charset
@@ -44,7 +46,7 @@ import java.nio.file.Files
 @Suppress("ALL")
 object PythonUtil {
 
-    //
+    // 
     private const val setEnv = "def setEnv(key,value):\n" +
         "    os.environ[key]=value\n" +
         "    f = open(\"##resultFile##\", 'a+')\n" +
@@ -54,7 +56,7 @@ object PythonUtil {
         "    f = open(\"##resultFile##\", 'a+')\n" +
         "    print(out, file=f)\n" +
         "    return out\n"
-    //
+    // 
 //    private const val setGateValue = "setGateValue(){\n" +
 //        "        local key=\$1\n" +
 //        "        local val=\$2\n" +
@@ -132,27 +134,25 @@ object PythonUtil {
         paramClassName: List<String>,
         charsetType: CharsetType? = null
     ): File {
-        val file = Files.createTempFile("devops_script", ".py").toFile()
+        val file = Files.createTempFile(CommonUtil.getTmpDir(), "devops_script", ".py").toFile()
         file.deleteOnExit()
 
         val command = StringBuilder()
 
         command.append("import os\n")
-            .append("os.environ['WORKSPACE']='${workspace.absolutePath}'\n")
-            .append("os.environ['DEVOPS_BUILD_SCRIPT_FILE']='${file.absolutePath}'\n")
+            .append("os.environ['WORKSPACE']='${StringEscapeUtils.escapeJava(workspace.absolutePath)}'\n")
+            .append("os.environ['DEVOPS_BUILD_SCRIPT_FILE']='${StringEscapeUtils.escapeJava(file.absolutePath)}'\n")
 
         // 设置系统环境变量
         systemEnvVariables?.forEach { (name, value) ->
-            command.append("os.environ['$name']='$value'\n")
+            command.append("os.environ['$name']='${StringEscapeUtils.escapeJava(value)}'\n")
         }
 
         val commonEnv = runtimeVariables
             .filterNot { specialEnv(it.key) || it.key in paramClassName }
         if (commonEnv.isNotEmpty()) {
             commonEnv.forEach { (name, value) ->
-                // --bug=75509999 Agent环境变量中替换掉破坏性字符
-                val clean = value.replace(specialCharToReplace, "")
-                command.append("os.environ['$name']='$clean'\n")
+                command.append("os.environ['$name']='${StringEscapeUtils.escapeJava(value)}'\n")
             }
         }
         if (buildEnvs.isNotEmpty()) {
@@ -182,7 +182,7 @@ object PythonUtil {
             }
             if (path.isNotEmpty()) {
                 path = "$path:\$PATH"
-                command.append("os.environ['PATH']='$path'\n")
+                command.append("os.environ['PATH']='${StringEscapeUtils.escapeJava(path)}'\n")
             }
         }
 
@@ -196,7 +196,7 @@ object PythonUtil {
         command.append(
             format_multiple_lines.replace(
                 oldValue = "##resultFile##",
-                newValue = File(dir, ScriptEnvUtils.getMultipleLineFile(buildId)).absolutePath
+                newValue = File(dir, ScriptEnvUtils.getMultipleLineFile(buildId)).absolutePath.replace("\\", "/")
             )
         )
 //        command.append(
@@ -238,7 +238,7 @@ object PythonUtil {
     ): String {
         try {
             return CommandLineUtils.execute(
-                command = command,
+                cmdLine = CommandLine.parse(command),
                 workspace = sourceDir,
                 print2Logger = print2Logger,
                 prefix = prefix,

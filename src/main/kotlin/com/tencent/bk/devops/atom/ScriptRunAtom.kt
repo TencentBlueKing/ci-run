@@ -31,10 +31,12 @@ import com.tencent.bk.devops.atom.utils.script.PowerShellUtil
 import com.tencent.bk.devops.atom.utils.script.PwshUtil
 import com.tencent.bk.devops.atom.utils.script.PythonUtil
 import com.tencent.bk.devops.atom.utils.script.ShUtil
+import com.tencent.bk.devops.atom.utils.script.WinBashUtil
 import com.tencent.bk.devops.plugin.pojo.ErrorType
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.nio.charset.Charset
 
 /**
  * @version 1.0.0
@@ -77,6 +79,11 @@ class ScriptRunAtom : TaskAtom<ScriptRunAtomParam> {
         } catch (ignore: Throwable) {
             CharsetType.DEFAULT
         }
+        val charset = when (charSetType) {
+            CharsetType.UTF_8 -> Charsets.UTF_8
+            CharsetType.GBK -> Charset.forName(CharsetType.GBK.name)
+            else -> Charset.defaultCharset()
+        }
         // 获取运行时变量
         val runtimeVariables = atomContext.allParameters.map { it.key to it.value.toString() }.toMap()
         // 获取系统类型
@@ -105,6 +112,18 @@ class ScriptRunAtom : TaskAtom<ScriptRunAtomParam> {
                         dir = workspace,
                         charsetType = charSetType,
                         paramClassName = paramClassName
+                    )
+                    /*bash脚本，windows使用*/
+                    ShellType.WIN_BASH -> WinBashUtil.execute(
+                        script = realCommand,
+                        buildId = buildId,
+                        runtimeVariables = runtimeVariables,
+                        dir = workspace,
+                        // 市场插件执行时buildEnvs已经写在环境变量中，作为子进程可以直接读取
+                        buildEnvs = emptyList(),
+                        stepId = param.stepId,
+                        paramClassName = paramClassName,
+                        charSetType = charSetType
                     )
                     /*shell脚本，一般linux和macos使用*/
                     ShellType.BASH -> BashUtil.execute(
@@ -184,7 +203,13 @@ class ScriptRunAtom : TaskAtom<ScriptRunAtomParam> {
                 )
             } finally {
                 // 写入上下文
-                ScriptEnvUtils.getContext(buildId, workspace).plus(parseContextFromMultiLine(buildId, workspace))
+                ScriptEnvUtils.getContext(buildId, workspace).plus(
+                    parseContextFromMultiLine(
+                        buildId,
+                        workspace,
+                        charset
+                    )
+                )
                     .forEach { (key, value) ->
                         /*根据拆分的格式来区分具体的类型*/
                         val split = key.split(",")
@@ -241,10 +266,14 @@ class ScriptRunAtom : TaskAtom<ScriptRunAtomParam> {
     /**
      * 单独解析多行内容的输出
      */
-    private fun parseContextFromMultiLine(buildId: String, workspace: File): Map<String, String> {
+    private fun parseContextFromMultiLine(
+        buildId: String,
+        workspace: File,
+        charset: Charset = Charsets.UTF_8
+    ): Map<String, String> {
         val res = mutableMapOf<String, String>()
         /*获得多行的输出内容*/
-        ScriptEnvUtils.getMultipleLines(buildId, workspace).forEach {
+        ScriptEnvUtils.getMultipleLines(buildId, workspace, charset).forEach {
             logger.debug("multiLine:$it")
             /*解析variable或者output变量*/
             val str = CommandLineUtils.parseVariable(it) ?: CommandLineUtils.parseOutput(it)

@@ -29,6 +29,9 @@ package com.tencent.bk.devops.atom.utils
 
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.io.FileInputStream
+import java.io.InputStream
+import java.nio.charset.Charset
 
 object ScriptEnvUtils {
     private const val ENV_FILE = "result.log"
@@ -65,8 +68,8 @@ object ScriptEnvUtils {
     }
 
     /*获取多行内容*/
-    fun getMultipleLines(buildId: String, workspace: File): List<String> {
-        return readLines(workspace, getMultipleLineFile(buildId))
+    fun getMultipleLines(buildId: String, workspace: File, charset: Charset = Charsets.UTF_8): List<String> {
+        return readLines(workspace, getMultipleLineFile(buildId), charset)
     }
 
     /*限定文件名*/
@@ -147,13 +150,27 @@ object ScriptEnvUtils {
         }
     }
 
-    private fun readLines(workspace: File, file: String): List<String> {
+    private fun readLines(workspace: File, file: String, charset: Charset = Charsets.UTF_8): List<String> {
         val f = File(workspace, file)
         /*不存在或是文件夹则返回空。非预期情况*/
         if (!f.exists() || f.isDirectory) {
             return emptyList()
         }
-        return f.readLines()
+        printFileCharSet(workspace, file)
+        return f.readLines(charset)
+    }
+
+    private fun printFileCharSet(workspace: File, fileName: String) {
+        val file = File(workspace, fileName)
+        val inStream: InputStream = FileInputStream(file)
+        val b = ByteArray(3)
+        inStream.read(b)
+        inStream.close()
+        if (b[0].toInt() == -17 && b[1].toInt() == -69 && b[2].toInt() == -65)
+            logger.debug(file.name + "is UTF-8")
+        else logger.debug(
+            file.name + "is GBK ,etc."
+        )
     }
 
     /*读取上下文文件*/

@@ -30,13 +30,15 @@ package com.tencent.bk.devops.atom.utils.script
 import com.tencent.bk.devops.atom.enums.CharsetType
 import com.tencent.bk.devops.atom.utils.CommandLineUtils
 import com.tencent.bk.devops.atom.utils.CommonUtil
+import org.apache.commons.exec.CommandLine
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.charset.Charset
+import java.nio.file.Files
 
 object PowerShellUtil {
 
-    //
+    // 
     private const val setEnv = "function setEnv(\$key, \$value)\n" +
         "{\n" +
         "    Set-Item -Path Env:\\\$key -Value \$value\n" +
@@ -49,6 +51,7 @@ object PowerShellUtil {
     private val specialKey = listOf("variables.", "settings.", "envs.", "ci.", "job.", "jobs.", "steps.")
 
     private val specialValue = listOf("\n", "\r")
+
 
     @Suppress("ALL")
     fun execute(
@@ -74,8 +77,9 @@ object PowerShellUtil {
                 charsetType = charsetType,
                 paramClassName = paramClassName
             )
+            val command = "powershell.exe /C \"${file.canonicalPath}\""
             return CommandLineUtils.execute(
-                command = "powershell.exe /C \"${file.canonicalPath}\"",
+                cmdLine = CommandLine.parse(command),
                 workspace = dir,
                 print2Logger = print2Logger,
                 prefix = prefix,
@@ -101,13 +105,7 @@ object PowerShellUtil {
         paramClassName: List<String>,
         charsetType: CharsetType? = null
     ): File {
-        val tmpDir = System.getProperty("java.io.tmpdir")
-        val file = if (tmpDir.isNullOrBlank()) {
-            File.createTempFile("devops_script", ".ps1")
-        } else {
-            File(tmpDir).mkdirs()
-            File.createTempFile("devops_script", ".ps1", File(tmpDir))
-        }
+        val file = Files.createTempFile(CommonUtil.getTmpDir(), "devops_script", ".ps1").toFile()
         file.deleteOnExit()
 
         val command = StringBuilder()
@@ -127,6 +125,7 @@ object PowerShellUtil {
             .append(script.replace("\n", "\r\n"))
             .append("\r\n")
             .append("exit")
+
 
         val charset = when (charsetType) {
             CharsetType.UTF_8 -> Charsets.UTF_8

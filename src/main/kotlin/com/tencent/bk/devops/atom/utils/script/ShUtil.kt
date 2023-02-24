@@ -34,6 +34,7 @@ import com.tencent.bk.devops.atom.utils.CommandLineUtils
 import com.tencent.bk.devops.atom.utils.CommonUtil
 import com.tencent.bk.devops.atom.utils.ScriptEnvUtils
 import com.tencent.bk.devops.atom.utils.getEnvironmentPathPrefix
+import org.apache.commons.exec.CommandLine
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.charset.Charset
@@ -42,7 +43,7 @@ import java.nio.file.Files
 @Suppress("ALL")
 object ShUtil {
 
-    //
+    // 
     private const val setEnv = "setEnv(){\n" +
         "        local key=\$1\n" +
         "        local val=\$2\n" +
@@ -66,7 +67,7 @@ object ShUtil {
         "    content=\"\${content//\$'\\r'/'%0D'}\"\n" +
         "    echo \"\$content\"\n" +
         "}\n"
-    //
+    // 
 //    private const val setGateValue = "setGateValue(){\n" +
 //        "        local key=\$1\n" +
 //        "        local val=\$2\n" +
@@ -140,7 +141,7 @@ object ShUtil {
         charSetType: CharsetType = CharsetType.UTF_8,
         paramClassName: List<String>
     ): File {
-        val file = Files.createTempFile("devops_script", ".sh").toFile()
+        val file = Files.createTempFile(CommonUtil.getTmpDir(), "devops_script", ".sh").toFile()
         file.deleteOnExit()
 
         val command = StringBuilder()
@@ -247,7 +248,7 @@ object ShUtil {
     ): String {
         try {
             return CommandLineUtils.execute(
-                command = command,
+                cmdLine = CommandLine.parse(command),
                 workspace = sourceDir,
                 print2Logger = print2Logger,
                 prefix = prefix,

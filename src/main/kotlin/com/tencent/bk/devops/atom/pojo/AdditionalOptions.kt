@@ -62,6 +62,9 @@ enum class ShellType(val shellName: String) {
     /*sh命令*/
     SH("sh"),
 
+    /*windows 执行 bash*/
+    WIN_BASH("win_bash"),
+
     /*按系统默认*/
     AUTO("auto");
 
@@ -69,6 +72,9 @@ enum class ShellType(val shellName: String) {
         fun get(value: String): ShellType {
             if (value == AUTO.shellName) {
                 return get(AgentEnv.getOS())
+            }
+            if (value == BASH.shellName && AgentEnv.getOS() == OSType.WINDOWS) {
+                return WIN_BASH
             }
             values().forEach {
                 if (value == it.shellName) return it

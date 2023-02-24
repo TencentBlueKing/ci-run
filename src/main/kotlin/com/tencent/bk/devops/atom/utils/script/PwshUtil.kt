@@ -31,6 +31,7 @@ import com.tencent.bk.devops.atom.enums.CharsetType
 import com.tencent.bk.devops.atom.utils.CommandLineUtils
 import com.tencent.bk.devops.atom.utils.CommonUtil
 import com.tencent.bk.devops.atom.utils.ScriptEnvUtils
+import org.apache.commons.exec.CommandLine
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.charset.Charset
@@ -38,7 +39,7 @@ import java.nio.file.Files
 
 object PwshUtil {
 
-    //
+    // 
     private const val setEnv = "function setEnv(\$key, \$value)\n" +
         "{\n" +
         "    Set-Item -Path Env:\\\$key -Value \$value\n" +
@@ -57,6 +58,7 @@ object PwshUtil {
     private val specialKey = listOf("variables.", "settings.", "envs.", "ci.", "job.", "jobs.", "steps.")
 
     private val specialValue = listOf("\n", "\r")
+
 
     @Suppress("ALL")
     fun execute(
@@ -82,8 +84,9 @@ object PwshUtil {
                 charsetType = charsetType,
                 paramClassName = paramClassName
             )
+            val command = "pwsh \"${file.canonicalPath}\""
             return CommandLineUtils.execute(
-                command = "pwsh \"${file.canonicalPath}\"",
+                cmdLine = CommandLine.parse(command),
                 workspace = dir,
                 print2Logger = print2Logger,
                 prefix = prefix,
@@ -109,7 +112,7 @@ object PwshUtil {
         paramClassName: List<String>,
         charsetType: CharsetType? = null
     ): File {
-        val file = Files.createTempFile("devops_script", ".ps1").toFile()
+        val file = Files.createTempFile(CommonUtil.getTmpDir(), "devops_script", ".ps1").toFile()
         file.deleteOnExit()
 
         val command = StringBuilder()
@@ -140,6 +143,7 @@ object PwshUtil {
             .append(script.replace("\n", "\r\n"))
             .append("\r\n")
             .append("exit")
+
 
         val charset = when (charsetType) {
             CharsetType.UTF_8 -> Charsets.UTF_8

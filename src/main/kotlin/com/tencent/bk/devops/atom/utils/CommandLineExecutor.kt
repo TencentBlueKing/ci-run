@@ -119,6 +119,7 @@ class CommandLineExecutor : DefaultExecutor() {
 
             closeProcessStreams(process)
 
+
             if (getExceptionCaught() != null) {
                 throw getExceptionCaught()!!
             }

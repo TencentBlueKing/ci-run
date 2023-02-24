@@ -28,48 +28,29 @@
 package com.tencent.bk.devops.atom.utils.script
 
 import com.tencent.bk.devops.atom.enums.CharsetType
-import com.tencent.bk.devops.atom.enums.OSType
 import com.tencent.bk.devops.atom.exception.AtomException
-import com.tencent.bk.devops.atom.pojo.AgentEnv
 import com.tencent.bk.devops.atom.pojo.BuildEnv
 import com.tencent.bk.devops.atom.utils.CommandLineUtils
 import com.tencent.bk.devops.atom.utils.CommonUtil
 import com.tencent.bk.devops.atom.utils.ScriptEnvUtils
-import com.tencent.bk.devops.atom.utils.getEnvironmentPathPrefix
 import org.apache.commons.exec.CommandLine
+import org.apache.commons.io.FilenameUtils
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.charset.Charset
 import java.nio.file.Files
 
 @Suppress("ALL")
-object BashUtil {
+object WinBashUtil {
 
-    // 
-    private const val setEnv = "setEnv(){\n" +
-        "        local key=\$1\n" +
-        "        local val=\$2\n" +
-        "\n" +
-        "        if [[ -z \"\$@\" ]]; then\n" +
-        "            return 0\n" +
-        "        fi\n" +
-        "\n" +
-        "        if ! echo \"\$key\" | grep -qE \"^[a-zA-Z_][a-zA-Z0-9_]*\$\"; then\n" +
-        "            echo \"[\$key] is invalid\" >&2\n" +
-        "            return 1\n" +
-        "        fi\n" +
-        "\n" +
-        "        echo \$key=\$val  >> ##resultFile##\n" +
-        "        export \$key=\"\$val\"\n" +
-        "    }\n"
-    private const val format_multiple_lines = "format_multiple_lines() {\n" +
-        "    local content=\$1\n" +
-        "    content=\"\${content//'%'/'%25'}\"\n" +
-        "    content=\"\${content//\$'\\n'/'%0A'}\"\n" +
-        "    content=\"\${content//\$'\\r'/'%0D'}\"\n" +
-        "    /bin/echo \"\$content\"|sed 's/\\\\n/%0A/g'|sed 's/\\\\r/%0D/g' >> ##resultFile##\n" +
-        "}\n"
-    // 
+    private const val DEFAULT_GIT_BASH_PATH = "C:\\Program Files\\Git\\bin\\bash.exe"
+
+    //
+    private const val setEnv =
+        "setEnv(){\n" + "        local key=\$1\n" + "        local val=\$2\n" + "\n" + "        if [[ -z \"\$@\" ]]; then\n" + "            return 0\n" + "        fi\n" + "\n" + "        if ! echo \"\$key\" | grep -qE \"^[a-zA-Z_][a-zA-Z0-9_]*\$\"; then\n" + "            echo \"[\$key] is invalid\" >&2\n" + "            return 1\n" + "        fi\n" + "\n" + "        echo \$key=\$val  >> ##resultFile##\n" + "        export \$key=\"\$val\"\n" + "    }\n"
+    private const val format_multiple_lines =
+        "format_multiple_lines() {\n" + "    local content=\$1\n" + "    content=\"\${content//'%'/'%25'}\"\n" + "    content=\"\${content//\$'\\n'/'%0A'}\"\n" + "    content=\"\${content//\$'\\r'/'%0D'}\"\n" + "    /bin/echo \"\$content\"|sed 's/\\\\n/%0A/g'|sed 's/\\\\r/%0D/g' >> ##resultFile##\n" + "}\n"
+    //
 //    private const val setGateValue = "setGateValue(){\n" +
 //        "        local key=\$1\n" +
 //        "        local val=\$2\n" +
@@ -107,27 +88,39 @@ object BashUtil {
         workspace: File = dir,
         print2Logger: Boolean = true,
         stepId: String? = null,
-        paramClassName: List<String>
+        paramClassName: List<String>,
+        charSetType: CharsetType? = null
     ): String {
+        val gitBashFile = File(DEFAULT_GIT_BASH_PATH)
+        val scriptPath = getCommandFile(
+            buildId = buildId,
+            script = script,
+            dir = dir,
+            workspace = workspace,
+            buildEnvs = buildEnvs,
+            runtimeVariables = runtimeVariables,
+            continueNoneZero = continueNoneZero,
+            systemEnvVariables = systemEnvVariables,
+            paramClassName = paramClassName
+        ).canonicalPath
+        val command = if (gitBashFile.exists()) {
+            arrayOf("/c", "\"\"$DEFAULT_GIT_BASH_PATH\" --login -i -- $scriptPath\"")
+        } else {
+            logger.warn("git-bash was not found in the default installation location, " +
+                "please add %YOUR_GIT_PATH%\\bin to the system environment variable path.")
+            arrayOf("/c", "\"bash --login -i -- $scriptPath\"")
+        }
+
         return executeUnixCommand(
-            command = getCommandFile(
-                buildId = buildId,
-                script = script,
-                dir = dir,
-                workspace = workspace,
-                buildEnvs = buildEnvs,
-                runtimeVariables = runtimeVariables,
-                continueNoneZero = continueNoneZero,
-                systemEnvVariables = systemEnvVariables,
-                paramClassName = paramClassName
-            ).canonicalPath,
+            cmdLine = CommandLine("cmd.exe").addArguments(command, false),
             sourceDir = dir,
             prefix = prefix,
             errorMessage = errorMessage,
             print2Logger = print2Logger,
             executeErrorMessage = "",
             buildId = buildId,
-            stepId = stepId
+            stepId = stepId,
+            charSetType = charSetType
         )
     }
 
@@ -152,16 +145,15 @@ object BashUtil {
             command.append(bashStr).append("\n")
         }
 
-        command.append("export WORKSPACE=${workspace.absolutePath}\n")
-            .append("export DEVOPS_BUILD_SCRIPT_FILE=${file.absolutePath}\n")
+        command.append("export WORKSPACE=${FilenameUtils.separatorsToUnix(workspace.absolutePath)}\n")
+            .append("export DEVOPS_BUILD_SCRIPT_FILE=${FilenameUtils.separatorsToUnix(file.absolutePath)}\n")
 
         // 设置系统环境变量
         systemEnvVariables?.forEach { (name, value) ->
             command.append("export $name=$value\n")
         }
 
-        val commonEnv = runtimeVariables
-            .filterNot { specialEnv(it.key) || it.key in paramClassName }
+        val commonEnv = runtimeVariables.filterNot { specialEnv(it.key) || it.key in paramClassName }
         if (commonEnv.isNotEmpty()) {
             commonEnv.forEach { (name, value) ->
                 // --bug=75509999 Agent环境变量中替换掉破坏性字符
@@ -169,7 +161,8 @@ object BashUtil {
                 command.append("export $name='$clean'\n")
             }
         }
-        if (buildEnvs.isNotEmpty()) {
+        // not use
+        /*if (buildEnvs.isNotEmpty()) {
             var path = ""
             buildEnvs.forEach { buildEnv ->
                 val home = File(getEnvironmentPathPrefix(), "${buildEnv.name}/${buildEnv.version}/")
@@ -198,7 +191,7 @@ object BashUtil {
                 path = "$path:\$PATH"
                 command.append("export PATH=$path\n")
             }
-        }
+        }*/
 
         if (!continueNoneZero) {
             command.append("set -e\n")
@@ -210,14 +203,17 @@ object BashUtil {
         command.append(
             setEnv.replace(
                 oldValue = "##resultFile##",
-                newValue = File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath
+                newValue = FilenameUtils.separatorsToUnix(File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath)
             )
         )
 
         command.append(
             format_multiple_lines.replace(
-                oldValue = "##resultFile##",
-                newValue = File(dir, ScriptEnvUtils.getMultipleLineFile(buildId)).absolutePath
+                oldValue = "##resultFile##", newValue = FilenameUtils.separatorsToUnix(
+                    File(
+                        dir, ScriptEnvUtils.getMultipleLineFile(buildId)
+                    ).absolutePath
+                )
             )
         )
 //        command.append(
@@ -234,41 +230,36 @@ object BashUtil {
 
         file.writeText(command.toString(), charset)
 
-        if (AgentEnv.getOS() != OSType.WINDOWS) {
-            executeUnixCommand(
-                command = "chmod +x ${file.absolutePath}",
-                sourceDir = dir,
-                buildId = buildId
-            )
-        }
         CommonUtil.printTempFileInfo(file)
         return file
     }
 
     private fun executeUnixCommand(
-        command: String,
+        cmdLine: CommandLine,
         sourceDir: File,
         prefix: String = "",
         errorMessage: String? = null,
         print2Logger: Boolean = true,
         executeErrorMessage: String? = null,
         buildId: String,
-        stepId: String? = null
+        stepId: String? = null,
+        charSetType: CharsetType? = null
     ): String {
         try {
             return CommandLineUtils.execute(
-                cmdLine = CommandLine.parse(command),
+                cmdLine = cmdLine,
                 workspace = sourceDir,
                 print2Logger = print2Logger,
                 prefix = prefix,
                 executeErrorMessage = executeErrorMessage,
                 buildId = buildId,
-                stepId = stepId
+                stepId = stepId,
+                charSetType = charSetType
             )
         } catch (taskError: AtomException) {
             throw taskError
         } catch (ignored: Throwable) {
-            val errorInfo = errorMessage ?: "Fail to run the command $command"
+            val errorInfo = errorMessage ?: "Fail to run the command "
             logger.info("$errorInfo because of error(${ignored.message})")
             throw AtomException(
                 ignored.message ?: ""

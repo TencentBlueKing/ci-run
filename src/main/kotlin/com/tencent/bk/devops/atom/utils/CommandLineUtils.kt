@@ -55,10 +55,11 @@ object CommandLineUtils {
     /*OUTPUT_GATE_TITLE 正则匹配规则*/
     private val OUTPUT_GATE_TITLE = Pattern.compile("title=([^,:=\\s]*)")
 
+
     private val lineParser = listOf(OauthCredentialLineParser())
 
     fun execute(
-        command: String,
+        cmdLine: CommandLine,
         workspace: File?,
         print2Logger: Boolean,
         prefix: String = "",
@@ -69,10 +70,9 @@ object CommandLineUtils {
     ): String {
         /*result 用于装载返回信息*/
         val result = StringBuilder()
-        logger.debug("will execute command >>> $command")
+        logger.debug("will execute command >>> $cmdLine")
 
         /*解析命令*/
-        val cmdLine = CommandLine.parse(command)
         /*生成executor*/
         val executor = CommandLineExecutor()
         if (workspace != null) {
@@ -169,7 +169,7 @@ object CommandLineUtils {
             }
         } catch (ignored: Throwable) {
             /*对其余异常兜底处理，可能是执行脚本时抛错的错。*/
-            val errorMessage = executeErrorMessage ?: "Fail to execute the command($command)"
+            val errorMessage = executeErrorMessage ?: "Fail to execute the command"
             logger.warn(errorMessage)
             throw AtomException(
                 ignored.message ?: ""
