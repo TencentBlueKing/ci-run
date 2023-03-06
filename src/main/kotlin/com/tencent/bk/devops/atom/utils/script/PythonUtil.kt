@@ -46,7 +46,7 @@ import java.nio.file.Files
 @Suppress("ALL")
 object PythonUtil {
 
-    // 
+    //
     private const val setEnv = "def setEnv(key,value):\n" +
         "    os.environ[key]=value\n" +
         "    f = open(\"##resultFile##\", 'a+')\n" +
@@ -56,7 +56,7 @@ object PythonUtil {
         "    f = open(\"##resultFile##\", 'a+')\n" +
         "    print(out, file=f)\n" +
         "    return out\n"
-    // 
+    //
 //    private const val setGateValue = "setGateValue(){\n" +
 //        "        local key=\$1\n" +
 //        "        local val=\$2\n" +
@@ -140,19 +140,19 @@ object PythonUtil {
         val command = StringBuilder()
 
         command.append("import os\n")
-            .append("os.environ['WORKSPACE']='${StringEscapeUtils.escapeJava(workspace.absolutePath)}'\n")
-            .append("os.environ['DEVOPS_BUILD_SCRIPT_FILE']='${StringEscapeUtils.escapeJava(file.absolutePath)}'\n")
+            .append("os.environ['WORKSPACE']=\"${StringEscapeUtils.escapeJava(workspace.absolutePath)}\"\n")
+            .append("os.environ['DEVOPS_BUILD_SCRIPT_FILE']=\"${StringEscapeUtils.escapeJava(file.absolutePath)}\"\n")
 
         // 设置系统环境变量
         systemEnvVariables?.forEach { (name, value) ->
-            command.append("os.environ['$name']='${StringEscapeUtils.escapeJava(value)}'\n")
+            command.append("os.environ['$name']=\"${StringEscapeUtils.escapeJava(value)}\"\n")
         }
 
         val commonEnv = runtimeVariables
             .filterNot { specialEnv(it.key) || it.key in paramClassName }
         if (commonEnv.isNotEmpty()) {
             commonEnv.forEach { (name, value) ->
-                command.append("os.environ['$name']='${StringEscapeUtils.escapeJava(value)}'\n")
+                command.append("os.environ['$name']=\"${StringEscapeUtils.escapeJava(value)}\"\n")
             }
         }
         if (buildEnvs.isNotEmpty()) {
@@ -182,7 +182,7 @@ object PythonUtil {
             }
             if (path.isNotEmpty()) {
                 path = "$path:\$PATH"
-                command.append("os.environ['PATH']='${StringEscapeUtils.escapeJava(path)}'\n")
+                command.append("os.environ['PATH']=\"${StringEscapeUtils.escapeJava(path)}\"\n")
             }
         }
 
