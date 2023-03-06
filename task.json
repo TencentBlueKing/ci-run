@@ -8,7 +8,7 @@
     "target": "$bk_java_path -jar run-jar-with-dependencies.jar"
   },
   "releaseInfo": {
-    "projectId": "Demo",
+    "projectId": "demo",
     "name": "RunScript",
     "language": "java",
     "logoUrl": "${{indexFile(\"logo.png\")}}",
@@ -29,7 +29,7 @@
       "frontendType": "NORMAL"
     },
     "versionInfo": {
-      "publisher": "admin",
+      "publisher": "Blueking",
       "releaseType": "NEW",
       "version": "1.0.0",
       "versionContent": "init"
