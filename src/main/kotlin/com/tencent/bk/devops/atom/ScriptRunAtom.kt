@@ -56,11 +56,12 @@ class ScriptRunAtom : TaskAtom<ScriptRunAtomParam> {
     )
 
     private val USER_ERROR_MESSAGE = """
-======脚本执行失败,问题排查指引======
-当脚本退出码非0时，执行失败。可以从以下路径进行分析：
-1. 根据错误日志排查
-2. 在本地手动执行脚本。如果本地执行也失败，很可能是脚本逻辑问题；
-如果本地OK，排查构建环境（比如环境依赖、或者代码变更等）
+====== Script Execution Failed, Troubleshooting Guide ======
+
+When the script exit code is non-zero, it indicates that the execution has failed. You can analyze it from the following paths:
+  1. Troubleshoot based on error logs.
+  2. Manually execute the script locally. If it also fails locally, it is likely to be a script logic issue. 
+If it succeeds locally, troubleshoot the build environment (such as environment dependencies or code changes, etc.).
     """
 
     override fun execute(atomContext: AtomContext<ScriptRunAtomParam>) {
@@ -180,13 +181,13 @@ class ScriptRunAtom : TaskAtom<ScriptRunAtomParam> {
                 }
 
                 result.status = Status.success
-                result.message = "$osType 脚本执行成功"
+                result.message = "$osType script executed successfully"
             } catch (taskError: AtomException) {
                 /*处理普通异常，这里是脚本逻辑抛出的异常*/
                 logger.warn("Fail to run the script task")
                 logger.debug("TaskExecuteException|${taskError.message}", taskError)
                 result.status = Status.failure
-                result.message = "$osType 脚本执行失败"
+                result.message = "$osType script execution failed"
                 /*返回失败以及对应的异常类型*/
                 throw AtomException(
                     taskError.message + "\n$USER_ERROR_MESSAGE"
@@ -196,7 +197,7 @@ class ScriptRunAtom : TaskAtom<ScriptRunAtomParam> {
                 logger.warn("Fail to run the script task")
                 logger.debug("Throwable|${ignore.message}", ignore)
                 result.status = Status.failure
-                result.message = "$osType 脚本执行失败"
+                result.message = "$osType script execution failed"
                 /*返回user类型错误，一般用户使用错误会引起这种情况*/
                 throw AtomException(
                     USER_ERROR_MESSAGE
@@ -235,18 +236,18 @@ class ScriptRunAtom : TaskAtom<ScriptRunAtomParam> {
                                         } else {
                                             /*不支持其他report类型，如果有直接抛错*/
                                             throw AtomException(
-                                                "脚本执行失败 set-output report设置有误，请检查"
+                                                "Script execution failed. The set-output report setting is incorrect. Please check"
                                             )
                                         }
                                     }
                                     /*不支持其他set-output类型，如果有直接抛错*/
                                     else -> throw AtomException(
-                                        "脚本执行失败 set-output设置有误，请检查: $split"
+                                        "The script execution failed. The set-output setting is wrong. Please check:$split"
                                     )
                                 }
                             /*不支持其他类型，如果有直接抛错*/
                             else -> throw AtomException(
-                                "脚本执行失败 set-output或set-variable设置有误，请检查: [${split.size == 1}]$split"
+                                "The script failed to execute. The set-output or set-variable settings are incorrect. Please check: [${split.size == 1}]$split"
                             )
                         }
                     }
@@ -454,7 +455,7 @@ class ScriptRunAtom : TaskAtom<ScriptRunAtomParam> {
             if (it == null || !it) {
                 /*返回异常情况处理*/
                 throw AtomException(
-                    "创建 run 红线指标失败"
+                    "Failed to create run redline indicator"
                 )
             }
         }
@@ -500,7 +501,7 @@ class ScriptRunAtom : TaskAtom<ScriptRunAtomParam> {
             if (it == null || !it) {
                 /*返回异常处理*/
                 throw AtomException(
-                    "保存 run 红线数据失败"
+                    "Failed to save run redline data"
                 )
             }
         }
@@ -552,7 +553,7 @@ class ScriptRunAtom : TaskAtom<ScriptRunAtomParam> {
                 /*windows不能使用sh*/
                 os == OSType.WINDOWS && shellType == ShellType.SH -> {
                 result.status = Status.failure
-                result.message = "$os 脚本执行失败"
+                result.message = "$os script execution failed"
                 /*不满足的情况直接用户抛错*/
                 throw AtomException(
                     "The current system(${os.name}) does not support: ${shellType.shellName}"

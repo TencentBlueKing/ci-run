@@ -172,11 +172,11 @@ object ShUtil {
             buildEnvs.forEach { buildEnv ->
                 val home = File(getEnvironmentPathPrefix(), "${buildEnv.name}/${buildEnv.version}/")
                 if (!home.exists()) {
-                    logger.error("环境变量路径(${home.absolutePath})不存在")
+                    logger.error("The environment variable path (${home.absolutePath}) does not exist")
                 }
                 val envFile = File(home, buildEnv.binPath)
                 if (!envFile.exists()) {
-                    logger.error("环境变量路径(${envFile.absolutePath})不存在")
+                    logger.error("The environment variable path (${envFile.absolutePath}) does not exist")
                     return@forEach
                 }
                 // command.append("export $name=$path")
@@ -201,7 +201,7 @@ object ShUtil {
         if (!continueNoneZero) {
             command.append("set -e\n")
         } else {
-            logger.info("每行命令运行返回值非零时，继续执行脚本")
+            logger.info("When the return value of each line of command is non-zero, continue to execute the script")
             command.append("set +e\n")
         }
 
