@@ -20,10 +20,11 @@ import com.tencent.bk.devops.atom.pojo.ShellType
 import com.tencent.bk.devops.atom.pojo.StringData
 import com.tencent.bk.devops.atom.pojo.request.IndicatorCreate
 import com.tencent.bk.devops.atom.pojo.request.QualityDataType
-import com.tencent.bk.devops.atom.pojo.request.QualityOperation
 import com.tencent.bk.devops.atom.spi.AtomService
 import com.tencent.bk.devops.atom.spi.TaskAtom
 import com.tencent.bk.devops.atom.utils.CommandLineUtils
+import com.tencent.bk.devops.atom.utils.I18nUtil
+import com.tencent.bk.devops.atom.utils.MessageUtil
 import com.tencent.bk.devops.atom.utils.ScriptEnvUtils
 import com.tencent.bk.devops.atom.utils.script.BashUtil
 import com.tencent.bk.devops.atom.utils.script.BatScriptUtil
@@ -36,6 +37,7 @@ import com.tencent.bk.devops.plugin.pojo.ErrorType
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.net.URLDecoder
 import java.nio.charset.Charset
 
 /**
@@ -175,9 +177,14 @@ If it succeeds locally, troubleshoot the build environment (such as environment 
                 logger.debug("TaskExecuteException|${taskError.message}", taskError)
                 result.status = Status.failure
                 result.message = "$osType script execution failed"
+                val mes = MessageUtil.getMessageByLocale(
+                    ErrorCode.USER_ERROR_MESSAGE,
+                    I18nUtil.getLanguage(),
+                    USER_ERROR_MESSAGE
+                )
                 /*返回失败以及对应的异常类型*/
                 throw AtomException(
-                    taskError.message + "\n$USER_ERROR_MESSAGE"
+                    taskError.message + "\n${URLDecoder.decode(mes, Charsets.UTF_8.name())}"
                 )
             } catch (ignore: Throwable) {
                 /*处理意外发生的异常，全局捕获*/
@@ -186,8 +193,13 @@ If it succeeds locally, troubleshoot the build environment (such as environment 
                 result.status = Status.failure
                 result.message = "$osType script execution failed"
                 /*返回user类型错误，一般用户使用错误会引起这种情况*/
-                throw AtomException(
+                val mes = MessageUtil.getMessageByLocale(
+                    ErrorCode.USER_ERROR_MESSAGE,
+                    I18nUtil.getLanguage(),
                     USER_ERROR_MESSAGE
+                )
+                throw AtomException(
+                    URLDecoder.decode(mes, Charsets.UTF_8.name())
                 )
             } finally {
                 // 写入上下文

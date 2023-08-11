@@ -1,5 +1,6 @@
 {
   "atomCode": "run",
+  "defaultLocaleLanguage": "en_US",
   "execution": {
     "packagePath": "run-jar-with-dependencies.jar",
     "language": "java",
