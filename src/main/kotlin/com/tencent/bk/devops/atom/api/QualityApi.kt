@@ -6,11 +6,8 @@ import com.tencent.bk.devops.atom.pojo.request.IndicatorCreate
 import com.tencent.bk.devops.atom.utils.json.JsonUtil
 import com.tencent.bk.devops.plugin.pojo.Result
 import okhttp3.RequestBody
-import org.slf4j.LoggerFactory
 
-class QualityApi() : BaseApi() {
-
-    private val logger = LoggerFactory.getLogger(QualityApi::class.java)
+class QualityApi : BaseApi() {
 
     private val urlPrefix = "/quality/api/build"
 

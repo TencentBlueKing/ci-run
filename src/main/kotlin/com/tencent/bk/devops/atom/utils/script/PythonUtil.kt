@@ -152,7 +152,7 @@ object PythonUtil {
             .filterNot { specialEnv(it.key) || it.key in paramClassName }
         if (commonEnv.isNotEmpty()) {
             commonEnv.forEach { (name, value) ->
-                command.append("os.environ['$name']=\"${StringEscapeUtils.escapeJava(value)}\"\n")
+                command.append("os.environ['$name']=\"${CommonUtil.escapeString(value)}\"\n")
             }
         }
         if (buildEnvs.isNotEmpty()) {
@@ -221,7 +221,7 @@ object PythonUtil {
                 charsetType = charsetType
             )
         }
-        CommonUtil.printTempFileInfo(file)
+        CommonUtil.printTempFileInfo(file, charset)
         return file
     }
 
@@ -244,8 +244,7 @@ object PythonUtil {
                 prefix = prefix,
                 executeErrorMessage = executeErrorMessage,
                 buildId = buildId,
-                charSetType = charsetType,
-                stepId = stepId
+                charSetType = charsetType
             )
         } catch (taskError: AtomException) {
             throw taskError

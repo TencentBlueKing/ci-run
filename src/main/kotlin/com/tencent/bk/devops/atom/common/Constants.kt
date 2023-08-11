@@ -27,12 +27,6 @@
 
 package com.tencent.bk.devops.atom.common
 
-const val BUILD_ID = "devops.build.id"
-
-const val BUILD_TYPE = "build.type"
-
-const val WORKSPACE_ENV = "WORKSPACE"
-
 const val WORKSPACE_CONTEXT = "ci.workspace"
 
 const val CI_TOKEN_CONTEXT = "ci.token"

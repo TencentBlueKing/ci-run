@@ -40,16 +40,37 @@ import java.io.File
 import java.nio.charset.Charset
 import java.nio.file.Files
 
-@Suppress("ALL")
+@Suppress("LongParameterList")
 object WinBashUtil {
 
     private const val DEFAULT_GIT_BASH_PATH = "C:\\Program Files\\Git\\bin\\bash.exe"
 
     //
     private const val setEnv =
-        "setEnv(){\n" + "        local key=\$1\n" + "        local val=\$2\n" + "\n" + "        if [[ -z \"\$@\" ]]; then\n" + "            return 0\n" + "        fi\n" + "\n" + "        if ! echo \"\$key\" | grep -qE \"^[a-zA-Z_][a-zA-Z0-9_]*\$\"; then\n" + "            echo \"[\$key] is invalid\" >&2\n" + "            return 1\n" + "        fi\n" + "\n" + "        echo \$key=\$val  >> ##resultFile##\n" + "        export \$key=\"\$val\"\n" + "    }\n"
+        "setEnv(){\n" +
+            "        local key=\$1\n" +
+            "        local val=\$2\n" +
+            "\n" +
+            "        if [[ -z \"\$@\" ]]; then\n" +
+            "            return 0\n" +
+            "        fi\n" +
+            "\n" +
+            "        if ! echo \"\$key\" | grep -qE \"^[a-zA-Z_][a-zA-Z0-9_]*\$\"; then\n" +
+            "            echo \"[\$key] is invalid\" >&2\n" +
+            "            return 1\n" +
+            "        fi\n" +
+            "\n" +
+            "        echo \$key=\$val  >> ##resultFile##\n" +
+            "        export \$key=\"\$val\"\n" +
+            "    }\n"
     private const val format_multiple_lines =
-        "format_multiple_lines() {\n" + "    local content=\$1\n" + "    content=\"\${content//'%'/'%25'}\"\n" + "    content=\"\${content//\$'\\n'/'%0A'}\"\n" + "    content=\"\${content//\$'\\r'/'%0D'}\"\n" + "    /bin/echo \"\$content\"|sed 's/\\\\n/%0A/g'|sed 's/\\\\r/%0D/g' >> ##resultFile##\n" + "}\n"
+        "format_multiple_lines() {\n" +
+            "    local content=\$1\n" +
+            "    content=\"\${content//'%'/'%25'}\"\n" +
+            "    content=\"\${content//\$'\\n'/'%0A'}\"\n" +
+            "    content=\"\${content//\$'\\r'/'%0D'}\"\n" +
+            "    /bin/echo \"\$content\"|sed 's/\\\\n/%0A/g'|sed 's/\\\\r/%0D/g' >> ##resultFile##\n" +
+            "}\n"
     //
 //    private const val setGateValue = "setGateValue(){\n" +
 //        "        local key=\$1\n" +
@@ -79,7 +100,6 @@ object WinBashUtil {
         buildId: String,
         script: String,
         dir: File,
-        buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false,
         systemEnvVariables: Map<String, String>? = null,
@@ -87,7 +107,6 @@ object WinBashUtil {
         errorMessage: String? = null,
         workspace: File = dir,
         print2Logger: Boolean = true,
-        stepId: String? = null,
         paramClassName: List<String>,
         charSetType: CharsetType? = null
     ): String {
@@ -96,12 +115,12 @@ object WinBashUtil {
             buildId = buildId,
             script = script,
             dir = dir,
-            workspace = workspace,
-            buildEnvs = buildEnvs,
             runtimeVariables = runtimeVariables,
             continueNoneZero = continueNoneZero,
             systemEnvVariables = systemEnvVariables,
-            paramClassName = paramClassName
+            workspace = workspace,
+            paramClassName = paramClassName,
+            charSetType = charSetType
         ).canonicalPath
         val command = if (gitBashFile.exists()) {
             arrayOf("/c", "\"\"$DEFAULT_GIT_BASH_PATH\" --login -i -- $scriptPath\"")
@@ -119,7 +138,6 @@ object WinBashUtil {
             print2Logger = print2Logger,
             executeErrorMessage = "",
             buildId = buildId,
-            stepId = stepId,
             charSetType = charSetType
         )
     }
@@ -128,12 +146,11 @@ object WinBashUtil {
         buildId: String,
         script: String,
         dir: File,
-        buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false,
         systemEnvVariables: Map<String, String>? = null,
         workspace: File = dir,
-        charSetType: CharsetType = CharsetType.UTF_8,
+        charSetType: CharsetType? = CharsetType.UTF_8,
         paramClassName: List<String>
     ): File {
         val file = Files.createTempFile(CommonUtil.getTmpDir(), "devops_script", ".sh").toFile()
@@ -230,7 +247,7 @@ object WinBashUtil {
 
         file.writeText(command.toString(), charset)
 
-        CommonUtil.printTempFileInfo(file)
+        CommonUtil.printTempFileInfo(file, charset)
         return file
     }
 
@@ -242,7 +259,6 @@ object WinBashUtil {
         print2Logger: Boolean = true,
         executeErrorMessage: String? = null,
         buildId: String,
-        stepId: String? = null,
         charSetType: CharsetType? = null
     ): String {
         try {
@@ -253,7 +269,6 @@ object WinBashUtil {
                 prefix = prefix,
                 executeErrorMessage = executeErrorMessage,
                 buildId = buildId,
-                stepId = stepId,
                 charSetType = charSetType
             )
         } catch (taskError: AtomException) {

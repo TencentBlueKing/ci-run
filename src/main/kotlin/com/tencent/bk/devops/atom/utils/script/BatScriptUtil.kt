@@ -78,7 +78,6 @@ object BatScriptUtil {
         errorMessage: String? = null,
         workspace: File = dir,
         print2Logger: Boolean = true,
-        stepId: String? = null,
         charsetType: CharsetType? = null
     ): String {
         try {
@@ -99,7 +98,6 @@ object BatScriptUtil {
                 prefix = prefix,
                 executeErrorMessage = "",
                 buildId = buildId,
-                stepId = stepId,
                 charSetType = charsetType
             )
         } catch (ignore: Throwable) {
@@ -165,7 +163,7 @@ object BatScriptUtil {
         logger.info("The default charset is $charset")
 
         file.writeText(command.toString(), charset)
-        CommonUtil.printTempFileInfo(file)
+        CommonUtil.printTempFileInfo(file, charset)
         return file
     }
 

@@ -15,3 +15,4 @@ version.txt
 build.yml
 .codecc
 task.json
+src/test/resources/input.json

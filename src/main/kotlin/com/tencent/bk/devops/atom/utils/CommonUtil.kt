@@ -30,6 +30,7 @@ package com.tencent.bk.devops.atom.utils
 import org.slf4j.LoggerFactory
 import sun.security.action.GetPropertyAction
 import java.io.File
+import java.nio.charset.Charset
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.security.AccessController
@@ -39,12 +40,32 @@ object CommonUtil {
     private val logger = LoggerFactory.getLogger(CommonUtil::class.java)
 
     /*统一打日志，debug信息用于问题排查*/
-    fun printTempFileInfo(file: File) {
+    fun printTempFileInfo(file: File, charset: Charset) {
         logger.debug("--------file(${file.name}) debug info-------------")
         logger.debug("absolutePath: ${file.absolutePath}")
         logger.debug("Size: ${file.length()}")
         logger.debug("canExecute/canRead/canWrite: ${file.canExecute()}/${file.canRead()}/${file.canWrite()}")
         logger.debug("--------file debug info end-------------")
+        logger.debug("--------user script start-------------")
+        file.readLines(charset).forEach {
+            logger.debug(it)
+        }
+        logger.debug("--------user script end-------------")
+    }
+
+    fun escapeString(str: String): String {
+        val builder = StringBuilder()
+        for (c in str) {
+            when (c) {
+                '\\' -> builder.append("\\\\")
+                '"' -> builder.append("\\\"")
+                '\n' -> builder.append("\\n")
+                '\r' -> builder.append("\\r")
+                '\t' -> builder.append("\\t")
+                else -> builder.append(c)
+            }
+        }
+        return builder.toString()
     }
 
     fun getTmpDir(): Path = Paths.get(AccessController.doPrivileged(GetPropertyAction("user.dir")))

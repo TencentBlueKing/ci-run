@@ -1,0 +1,38 @@
+[
+  {
+    "errorCode": 800001,
+    "errorMsgZhCn": "插件异常默认",
+    "errorMsgZhTw": "插件異常默認",
+    "errorMsgEn": "Plugin exception default"
+  },
+  {
+    "errorCode": 800002,
+    "errorMsgZhCn": "创建质量红线指标异常",
+    "errorMsgZhTw": "創建質量紅線指標異常",
+    "errorMsgEn": "Create quality red line indicator exception"
+  },
+  {
+    "errorCode": 800003,
+    "errorMsgZhCn": "报错质量红线数据异常",
+    "errorMsgZhTw": "報錯質量紅線數據異常",
+    "errorMsgEn": "Error quality red line data abnormality"
+  },
+  {
+    "errorCode": 800004,
+    "errorMsgZhCn": "用户输入数据有误",
+    "errorMsgZhTw": "用戶輸入數據有誤",
+    "errorMsgEn": "User entered data incorrectly"
+  },
+  {
+    "errorCode": 800005,
+    "errorMsgZhCn": "插件执行过程出错",
+    "errorMsgZhTw": "插件執行過程出錯",
+    "errorMsgEn": "Error during plugin execution"
+  },
+  {
+    "errorCode": 800006,
+    "errorMsgZhCn": "脚本命令无法正常执行",
+    "errorMsgZhTw": "腳本命令無法正常執行",
+    "errorMsgEn": "Script command cannot be executed normally"
+  }
+]

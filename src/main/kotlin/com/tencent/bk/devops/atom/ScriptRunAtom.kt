@@ -42,18 +42,10 @@ import java.nio.charset.Charset
  * @version 1.0.0
  */
 @AtomService(paramClass = ScriptRunAtomParam::class)
+@Suppress("ALL")
 class ScriptRunAtom : TaskAtom<ScriptRunAtomParam> {
 
     private val qualityApi = QualityApi()
-
-    private val QUALITY_BOOLEAN_OPERATIONS = listOf(QualityOperation.EQ)
-    private val QUALITY_ALL_OPERATIONS = listOf(
-        QualityOperation.EQ,
-        QualityOperation.GT,
-        QualityOperation.GE,
-        QualityOperation.LT,
-        QualityOperation.LE
-    )
 
     private val USER_ERROR_MESSAGE = """
 ====== Script Execution Failed, Troubleshooting Guide ======
@@ -111,8 +103,8 @@ If it succeeds locally, troubleshoot the build environment (such as environment 
                         buildId = buildId,
                         runtimeVariables = runtimeVariables,
                         dir = workspace,
-                        charsetType = charSetType,
-                        paramClassName = paramClassName
+                        paramClassName = paramClassName,
+                        charsetType = charSetType
                     )
                     /*bash脚本，windows使用*/
                     ShellType.WIN_BASH -> WinBashUtil.execute(
@@ -120,9 +112,6 @@ If it succeeds locally, troubleshoot the build environment (such as environment 
                         buildId = buildId,
                         runtimeVariables = runtimeVariables,
                         dir = workspace,
-                        // 市场插件执行时buildEnvs已经写在环境变量中，作为子进程可以直接读取
-                        buildEnvs = emptyList(),
-                        stepId = param.stepId,
                         paramClassName = paramClassName,
                         charSetType = charSetType
                     )
@@ -154,7 +143,6 @@ If it succeeds locally, troubleshoot the build environment (such as environment 
                         buildId = buildId,
                         runtimeVariables = runtimeVariables,
                         dir = workspace,
-                        stepId = param.stepId,
                         paramClassName = paramClassName
                     )
                     /*powershell desktop脚本*/
@@ -163,7 +151,6 @@ If it succeeds locally, troubleshoot the build environment (such as environment 
                         buildId = buildId,
                         runtimeVariables = runtimeVariables,
                         dir = workspace,
-                        stepId = param.stepId,
                         paramClassName = paramClassName
                     )
                     /*执行sh命令的脚本*/
@@ -298,7 +285,7 @@ If it succeeds locally, troubleshoot the build environment (such as environment 
             action()
         } catch (triggerE: AtomException) {
             atomResult.message = triggerE.message
-            atomResult.errorCode = ErrorCode.USER_SCRIPT_TASK_FAIL
+            atomResult.errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD
             atomResult.errorType = ErrorType.USER.num
             atomResult.status = Status.failure
         } catch (e: Throwable) {
@@ -461,7 +448,7 @@ If it succeeds locally, troubleshoot the build environment (such as environment 
         }
     }
 
-    fun getQualityDataType(value: String): QualityDataType {
+    private fun getQualityDataType(value: String): QualityDataType {
         /*转int*/
         value.toIntOrNull().let {
             if (it != null) {

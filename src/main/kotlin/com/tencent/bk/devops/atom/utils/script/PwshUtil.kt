@@ -59,7 +59,6 @@ object PwshUtil {
 
     private val specialValue = listOf("\n", "\r")
 
-
     @Suppress("ALL")
     fun execute(
         script: String,
@@ -71,7 +70,6 @@ object PwshUtil {
         errorMessage: String? = null,
         workspace: File = dir,
         print2Logger: Boolean = true,
-        stepId: String? = null,
         charsetType: CharsetType? = null
     ): String {
         try {
@@ -92,7 +90,6 @@ object PwshUtil {
                 prefix = prefix,
                 executeErrorMessage = "",
                 buildId = buildId,
-                stepId = stepId,
                 charSetType = charsetType
             )
         } catch (ignore: Throwable) {
@@ -144,7 +141,6 @@ object PwshUtil {
             .append("\r\n")
             .append("exit")
 
-
         val charset = when (charsetType) {
             CharsetType.UTF_8 -> Charsets.UTF_8
             CharsetType.GBK -> Charset.forName(CharsetType.GBK.name)
@@ -153,7 +149,7 @@ object PwshUtil {
         logger.info("The default charset is $charset")
 
         file.writeText(command.toString(), charset)
-        CommonUtil.printTempFileInfo(file)
+        CommonUtil.printTempFileInfo(file, charset)
         return file
     }
 

@@ -124,8 +124,7 @@ object ShUtil {
             errorMessage = errorMessage,
             print2Logger = print2Logger,
             executeErrorMessage = "",
-            buildId = buildId,
-            stepId = stepId
+            buildId = buildId
         )
     }
 
@@ -232,7 +231,7 @@ object ShUtil {
             sourceDir = dir,
             buildId = buildId
         )
-        CommonUtil.printTempFileInfo(file)
+        CommonUtil.printTempFileInfo(file, charset)
         return file
     }
 
@@ -243,8 +242,7 @@ object ShUtil {
         errorMessage: String? = null,
         print2Logger: Boolean = true,
         executeErrorMessage: String? = null,
-        buildId: String,
-        stepId: String? = null
+        buildId: String
     ): String {
         try {
             return CommandLineUtils.execute(
@@ -253,8 +251,7 @@ object ShUtil {
                 print2Logger = print2Logger,
                 prefix = prefix,
                 executeErrorMessage = executeErrorMessage,
-                buildId = buildId,
-                stepId = stepId
+                buildId = buildId
             )
         } catch (taskError: AtomException) {
             throw taskError

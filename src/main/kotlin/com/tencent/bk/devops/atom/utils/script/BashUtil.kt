@@ -126,12 +126,11 @@ object BashUtil {
             errorMessage = errorMessage,
             print2Logger = print2Logger,
             executeErrorMessage = "",
-            buildId = buildId,
-            stepId = stepId
+            buildId = buildId
         )
     }
 
-    fun getCommandFile(
+    private fun getCommandFile(
         buildId: String,
         script: String,
         dir: File,
@@ -144,7 +143,9 @@ object BashUtil {
         paramClassName: List<String>
     ): File {
         val file = Files.createTempFile(CommonUtil.getTmpDir(), "devops_script", ".sh").toFile()
+        val userScriptFile = Files.createTempFile(CommonUtil.getTmpDir(), "devops_script_user_", ".sh").toFile()
         file.deleteOnExit()
+        userScriptFile.deleteOnExit()
 
         val command = StringBuilder()
         val bashStr = script.split("\n")[0]
@@ -223,16 +224,16 @@ object BashUtil {
 //        command.append(
 //            setGateValue.replace(oldValue = "##gateValueFile##",
 //            newValue = File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath))
-        command.append(script)
-
+        command.append(". ${userScriptFile.absolutePath}")
         val charset = when (charSetType) {
             CharsetType.UTF_8 -> Charsets.UTF_8
             CharsetType.GBK -> Charset.forName(CharsetType.GBK.name)
             else -> Charset.defaultCharset()
         }
-        logger.info("The default charset is $charset")
-
+        userScriptFile.writeText(script, charset)
         file.writeText(command.toString(), charset)
+
+        logger.info("The default charset is $charset")
 
         if (AgentEnv.getOS() != OSType.WINDOWS) {
             executeUnixCommand(
@@ -240,8 +241,13 @@ object BashUtil {
                 sourceDir = dir,
                 buildId = buildId
             )
+            executeUnixCommand(
+                command = "chmod +x ${userScriptFile.absolutePath}",
+                sourceDir = dir,
+                buildId = buildId
+            )
         }
-        CommonUtil.printTempFileInfo(file)
+        CommonUtil.printTempFileInfo(file, charset)
         return file
     }
 
@@ -252,8 +258,7 @@ object BashUtil {
         errorMessage: String? = null,
         print2Logger: Boolean = true,
         executeErrorMessage: String? = null,
-        buildId: String,
-        stepId: String? = null
+        buildId: String
     ): String {
         try {
             return CommandLineUtils.execute(
@@ -262,8 +267,7 @@ object BashUtil {
                 print2Logger = print2Logger,
                 prefix = prefix,
                 executeErrorMessage = executeErrorMessage,
-                buildId = buildId,
-                stepId = stepId
+                buildId = buildId
             )
         } catch (taskError: AtomException) {
             throw taskError

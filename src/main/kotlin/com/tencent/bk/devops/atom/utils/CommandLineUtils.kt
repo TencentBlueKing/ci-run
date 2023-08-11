@@ -55,9 +55,9 @@ object CommandLineUtils {
     /*OUTPUT_GATE_TITLE 正则匹配规则*/
     private val OUTPUT_GATE_TITLE = Pattern.compile("title=([^,:=\\s]*)")
 
-
     private val lineParser = listOf(OauthCredentialLineParser())
 
+    @Suppress("LongParameterList")
     fun execute(
         cmdLine: CommandLine,
         workspace: File?,
@@ -65,7 +65,6 @@ object CommandLineUtils {
         prefix: String = "",
         executeErrorMessage: String? = null,
         buildId: String,
-        stepId: String? = null,
         charSetType: CharsetType? = null
     ): String {
         /*result 用于装载返回信息*/

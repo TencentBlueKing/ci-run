@@ -28,6 +28,7 @@
 package com.tencent.bk.devops.atom.utils
 
 /*getEnvironmentPathPrefix 公共方法*/
+@Suppress("ReturnCount")
 fun getEnvironmentPathPrefix(): String {
     val os = System.getProperty("os.name")
     if (os.isNullOrEmpty()) {

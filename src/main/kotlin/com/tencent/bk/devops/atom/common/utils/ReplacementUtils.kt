@@ -78,10 +78,10 @@ object ReplacementUtils {
             var value = replacement.getReplacement(key) ?: contextMap?.get(key)
             if (value == null) {
                 // 修复错误的替换（bad substitution）错误
-                if (matcher.group().startsWith("\${{")) {
-                    value = "\\${matcher.group()}"
+                value = if (matcher.group().startsWith("\${{")) {
+                    "\\${matcher.group()}"
                 } else {
-                    value = matcher.group()
+                    matcher.group()
                 }
             } else {
                 if (depth > 0 && tPattern.matcher(value).find()) {

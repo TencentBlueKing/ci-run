@@ -27,6 +27,7 @@
 
 package com.tencent.bk.devops.atom.pojo
 
+import com.tencent.bk.devops.atom.common.ErrorCode
 import com.tencent.bk.devops.atom.enums.OSType
 import com.tencent.bk.devops.atom.exception.AtomException
 
@@ -35,7 +36,7 @@ data class AdditionalOptions(
 ) {
     constructor(shell: String) : this(ShellType.BASH) {
         /*用户没有配置脚本类型就按照系统类型默认选择*/
-        this.shell = if (shell.isNullOrBlank()) {
+        this.shell = if (shell.isBlank()) {
             ShellType.get(AgentEnv.getOS())
         } else {
             ShellType.get(shell)
@@ -46,29 +47,23 @@ data class AdditionalOptions(
 enum class ShellType(val shellName: String) {
     /*bash*/
     BASH("bash"),
-
     /*cmd*/
     CMD("cmd"),
-
     /*powershell*/
     POWERSHELL_CORE("pwsh"),
-
     /*powershell*/
     POWERSHELL_DESKTOP("powershell"),
-
     /*python*/
     PYTHON("python"),
-
     /*sh命令*/
     SH("sh"),
-
     /*windows 执行 bash*/
     WIN_BASH("win_bash"),
-
     /*按系统默认*/
     AUTO("auto");
 
     companion object {
+        @Suppress("ReturnCount")
         fun get(value: String): ShellType {
             if (value == AUTO.shellName) {
                 return get(AgentEnv.getOS())

@@ -31,6 +31,7 @@ import com.tencent.bk.devops.atom.enums.CharsetType
 import com.tencent.bk.devops.atom.utils.CommandLineUtils
 import com.tencent.bk.devops.atom.utils.CommonUtil
 import org.apache.commons.exec.CommandLine
+import org.apache.commons.text.StringEscapeUtils
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.charset.Charset
@@ -52,7 +53,6 @@ object PowerShellUtil {
 
     private val specialValue = listOf("\n", "\r")
 
-
     @Suppress("ALL")
     fun execute(
         script: String,
@@ -64,18 +64,16 @@ object PowerShellUtil {
         errorMessage: String? = null,
         workspace: File = dir,
         print2Logger: Boolean = true,
-        stepId: String? = null,
         charsetType: CharsetType? = null
     ): String {
         try {
             val file = getCommandFile(
-                buildId = buildId,
                 script = script,
                 runtimeVariables = runtimeVariables,
                 dir = dir,
                 workspace = workspace,
-                charsetType = charsetType,
-                paramClassName = paramClassName
+                paramClassName = paramClassName,
+                charsetType = charsetType
             )
             val command = "powershell.exe /C \"${file.canonicalPath}\""
             return CommandLineUtils.execute(
@@ -85,7 +83,6 @@ object PowerShellUtil {
                 prefix = prefix,
                 executeErrorMessage = "",
                 buildId = buildId,
-                stepId = stepId,
                 charSetType = charsetType
             )
         } catch (ignore: Throwable) {
@@ -97,7 +94,6 @@ object PowerShellUtil {
 
     @Suppress("ALL")
     fun getCommandFile(
-        buildId: String,
         script: String,
         runtimeVariables: Map<String, String>,
         dir: File,
@@ -118,14 +114,17 @@ object PowerShellUtil {
 //            .plus(CommonEnv.getCommonEnv()) //
             .filterNot { specialEnv(it.key, it.value) || it.key in paramClassName }
             .forEach { (name, value) ->
-                command.append("Set-Item -Path Env:\\$name -Value '$value'\n")
+                command.append(
+                    "Set-Item -Path Env:\\$name -Value '${
+                        StringEscapeUtils.escapeJava(value).replace("'", "''")
+                    }'\n"
+                )
             }
 
         command.append(setEnv)
             .append(script.replace("\n", "\r\n"))
             .append("\r\n")
             .append("exit")
-
 
         val charset = when (charsetType) {
             CharsetType.UTF_8 -> Charsets.UTF_8
@@ -135,7 +134,7 @@ object PowerShellUtil {
         logger.info("The default charset is $charset")
 
         file.writeText(command.toString(), charset)
-        CommonUtil.printTempFileInfo(file)
+        CommonUtil.printTempFileInfo(file, charset)
         return file
     }
 

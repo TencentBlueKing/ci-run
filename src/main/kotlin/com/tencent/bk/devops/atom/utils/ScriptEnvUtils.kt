@@ -33,6 +33,7 @@ import java.io.FileInputStream
 import java.io.InputStream
 import java.nio.charset.Charset
 
+@Suppress("TooManyFunctions")
 object ScriptEnvUtils {
     private const val ENV_FILE = "result.log"
     private const val MULTILINE_FILE = "multiLine.log"
@@ -160,6 +161,7 @@ object ScriptEnvUtils {
         return f.readLines(charset)
     }
 
+    @Suppress("MagicNumber")
     private fun printFileCharSet(workspace: File, fileName: String) {
         val file = File(workspace, fileName)
         val inStream: InputStream = FileInputStream(file)

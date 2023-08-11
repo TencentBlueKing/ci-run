@@ -33,6 +33,7 @@ import java.util.UUID
  *
  * Powered By Tencent
  */
+@Suppress("MagicNumber")
 object UUIDUtil {
     /**
      * 生成32位字符随机UUID
