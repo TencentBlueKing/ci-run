@@ -48,7 +48,7 @@
       "list": [
         {
           "value": "auto",
-          "label": "by default"
+          "label": "DEFAULT"
         },{
           "value": "bash",
           "label": "BASH"
@@ -77,7 +77,7 @@
       "default": "auto"
     },
     "script": {
-      "label": "script",
+      "label": "Script",
       "default": "",
       "placeholder": "Please enter script",
       "type": "atom-ace-editor",
