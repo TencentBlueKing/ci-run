@@ -153,7 +153,8 @@ If it succeeds locally, troubleshoot the build environment (such as environment 
                         buildId = buildId,
                         runtimeVariables = runtimeVariables,
                         dir = workspace,
-                        paramClassName = paramClassName
+                        paramClassName = paramClassName,
+                        charsetType = charSetType
                     )
                     /*执行sh命令的脚本*/
                     ShellType.SH -> ShUtil.execute(
