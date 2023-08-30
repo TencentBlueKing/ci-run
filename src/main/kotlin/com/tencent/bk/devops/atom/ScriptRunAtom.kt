@@ -79,6 +79,7 @@ If it succeeds locally, troubleshoot the build environment (such as environment 
             CharsetType.GBK -> Charset.forName(CharsetType.GBK.name)
             else -> Charset.defaultCharset()
         }
+        logger.debug("input charSet type: $charSetType")
         // 获取运行时变量
         val runtimeVariables = atomContext.allParameters.map { it.key to it.value.toString() }.toMap()
         // 获取系统类型
