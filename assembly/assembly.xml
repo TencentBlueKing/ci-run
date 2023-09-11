@@ -15,7 +15,7 @@
         <fileSet>
             <directory>.</directory>
             <includes>
-                <include>task.json</include>
+                <include>*.json</include>
             </includes>
             <outputDirectory>/</outputDirectory>
         </fileSet>
