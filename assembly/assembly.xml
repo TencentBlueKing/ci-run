@@ -6,15 +6,14 @@
     <fileSets>
         <!-- 从目标目录拷贝文件去压缩 -->
         <fileSet>
-            <directory>target</directory>
+            <directory>${project.build.directory}</directory>
             <includes>
                 <include>run-jar-with-dependencies.jar</include>
-                <include>../task.json</include>
             </includes>
             <outputDirectory>/</outputDirectory>
         </fileSet>
         <fileSet>
-            <directory></directory>
+            <directory>.</directory>
             <includes>
                 <include>task.json</include>
             </includes>
@@ -24,6 +23,7 @@
             <directory></directory>
             <includes>
                 <include>README_EN.md</include>
+                <include>README.md</include>
             </includes>
             <outputDirectory>/file</outputDirectory>
         </fileSet>
@@ -34,6 +34,13 @@
                 <include>logo.png</include>
             </includes>
             <outputDirectory>/file</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${basedir}/src/main/resources/i18n</directory>
+            <outputDirectory>/i18n</outputDirectory>
+            <includes>
+                <include>*.properties</include>
+            </includes>
         </fileSet>
     </fileSets>
 </assembly>
