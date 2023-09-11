@@ -1,6 +1,6 @@
 {
   "atomCode": "run",
-  "defaultLocaleLanguage": "en_US",
+  "defaultLocaleLanguage": "zh_CN",
   "execution": {
     "packagePath": "run-jar-with-dependencies.jar",
     "language": "java",
@@ -25,7 +25,7 @@
 
     ],
     "summary": "Execute the script plugin. Support cross-system use.",
-    "description": "${{indexFile(\"README_EN.md\")}}",
+    "description": "${{indexFile(\"README.md\")}}",
     "configInfo": {
       "frontendType": "NORMAL"
     },
