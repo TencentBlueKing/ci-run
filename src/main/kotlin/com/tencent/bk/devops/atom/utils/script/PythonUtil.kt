@@ -87,6 +87,7 @@ object PythonUtil {
         dir: File,
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
+        runCommand: String,
         continueNoneZero: Boolean = false,
         systemEnvVariables: Map<String, String>? = null,
         prefix: String = "",
@@ -98,7 +99,7 @@ object PythonUtil {
         charsetType: CharsetType? = null
     ): String {
         return executeUnixCommand(
-            command = "python3 " + getCommandFile(
+            command = "$runCommand " + getCommandFile(
                 buildId = buildId,
                 script = script,
                 dir = dir,

@@ -27,7 +27,6 @@
 
 package com.tencent.bk.devops.atom.pojo
 
-import com.tencent.bk.devops.atom.common.ErrorCode
 import com.tencent.bk.devops.atom.enums.OSType
 import com.tencent.bk.devops.atom.exception.AtomException
 
@@ -53,8 +52,10 @@ enum class ShellType(val shellName: String) {
     POWERSHELL_CORE("pwsh"),
     /*powershell*/
     POWERSHELL_DESKTOP("powershell"),
+    /*python3*/
+    PYTHON3("python"),
     /*python*/
-    PYTHON("python"),
+    PY("py"),
     /*sh命令*/
     SH("sh"),
     /*windows 执行 bash*/

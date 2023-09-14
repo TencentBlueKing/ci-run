@@ -67,11 +67,15 @@
         },
         {
           "value": "python",
-          "label": "PYTHON"
+          "label": "PYTHON3"
         },
         {
           "value": "sh",
           "label": "SH"
+        },
+        {
+          "value": "py",
+          "label": "PY"
         }
       ],
       "default": "auto"

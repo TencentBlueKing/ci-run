@@ -129,11 +129,24 @@ If it succeeds locally, troubleshoot the build environment (such as environment 
                         stepId = param.stepId,
                         paramClassName = paramClassName
                     )
-                    /*python脚本，需要目标构建机安装python3环境*/
-                    ShellType.PYTHON -> PythonUtil.execute(
+                    /*python3脚本，需要目标构建机安装python3环境*/
+                    ShellType.PYTHON3 -> PythonUtil.execute(
                         script = realCommand,
                         buildId = buildId,
                         runtimeVariables = runtimeVariables,
+                        runCommand = "python3",
+                        dir = workspace,
+                        buildEnvs = emptyList(),
+                        stepId = param.stepId,
+                        charsetType = charSetType,
+                        paramClassName = paramClassName
+                    )
+                    /*python脚本，需要目标构建机安装py环境*/
+                    ShellType.PY -> PythonUtil.execute(
+                        script = realCommand,
+                        buildId = buildId,
+                        runtimeVariables = runtimeVariables,
+                        runCommand = "py",
                         dir = workspace,
                         buildEnvs = emptyList(),
                         stepId = param.stepId,
