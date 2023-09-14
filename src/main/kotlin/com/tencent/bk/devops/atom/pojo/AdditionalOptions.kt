@@ -55,7 +55,7 @@ enum class ShellType(val shellName: String) {
     /*python3*/
     PYTHON3("python"),
     /*python*/
-    PY("py"),
+    PYTHON("python-official"),
     /*sh命令*/
     SH("sh"),
     /*windows 执行 bash*/

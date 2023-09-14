@@ -142,11 +142,11 @@ If it succeeds locally, troubleshoot the build environment (such as environment 
                         paramClassName = paramClassName
                     )
                     /*python脚本，需要目标构建机安装py环境*/
-                    ShellType.PY -> PythonUtil.execute(
+                    ShellType.PYTHON -> PythonUtil.execute(
                         script = realCommand,
                         buildId = buildId,
                         runtimeVariables = runtimeVariables,
-                        runCommand = "py",
+                        runCommand = "python",
                         dir = workspace,
                         buildEnvs = emptyList(),
                         stepId = param.stepId,

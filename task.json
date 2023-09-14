@@ -74,8 +74,8 @@
           "label": "SH"
         },
         {
-          "value": "py",
-          "label": "PY"
+          "value": "python-official",
+          "label": "PYTHON"
         }
       ],
       "default": "auto"
