@@ -91,7 +91,6 @@ object BashUtil {
     private val specialKey = listOf(".", "-")
 
     //    private val specialValue = listOf("|", "&", "(", ")")
-    private val specialCharToReplace = Regex("['\n]") // --bug=75509999 Agent环境变量中替换掉破坏性字符
     private val logger = LoggerFactory.getLogger(BashUtil::class.java)
 
     fun execute(
@@ -165,9 +164,8 @@ object BashUtil {
             .filterNot { specialEnv(it.key) || it.key in paramClassName }
         if (commonEnv.isNotEmpty()) {
             commonEnv.forEach { (name, value) ->
-                // --bug=75509999 Agent环境变量中替换掉破坏性字符
-                val clean = value.replace(specialCharToReplace, "")
-                command.append("export $name='$clean'\n")
+                val clean = value.replace(""""""", """\"""")
+                command.append("export $name=\"$clean\"\n")
             }
         }
         if (buildEnvs.isNotEmpty()) {
