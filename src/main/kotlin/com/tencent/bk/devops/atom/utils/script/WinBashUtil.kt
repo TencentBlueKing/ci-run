@@ -44,6 +44,7 @@ import java.nio.file.Files
 object WinBashUtil {
 
     private const val DEFAULT_GIT_BASH_PATH = "C:\\Program Files\\Git\\bin\\bash.exe"
+    private val pattern = "\\$\\{\\{(.+?)}}".toRegex()
 
     //
     private const val setEnv =
@@ -172,8 +173,12 @@ object WinBashUtil {
         val commonEnv = runtimeVariables.filterNot { specialEnv(it.key) || it.key in paramClassName }
         if (commonEnv.isNotEmpty()) {
             commonEnv.forEach { (name, value) ->
-                val clean = value.replace(""""""", """\"""")
-                command.append("export $name=\"$clean\"\n")
+                val clean = if (value.contains("\${{")) {
+                    value.replace(pattern) { "\\\${{${it.groups[1]?.value}}}" }
+                } else {
+                    value
+                }
+                command.append("export $name=\"${clean.replace(""""""", """\"""")}\"\n")
             }
         }
         // not use
