@@ -166,7 +166,7 @@ object BashUtil {
         if (commonEnv.isNotEmpty()) {
             commonEnv.forEach { (name, value) ->
                 val clean = if (value.contains("\${{")) {
-                    value.replace(pattern) { "\\\${${it.groups[1]?.value}}" }
+                    value.replace(pattern) { "\\\${{${it.groups[1]?.value}}}" }
                 } else {
                     value
                 }
