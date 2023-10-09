@@ -33,12 +33,12 @@ import com.tencent.bk.devops.atom.pojo.BuildEnv
 import com.tencent.bk.devops.atom.utils.CommandLineUtils
 import com.tencent.bk.devops.atom.utils.CommonUtil
 import com.tencent.bk.devops.atom.utils.ScriptEnvUtils
-import org.apache.commons.exec.CommandLine
-import org.apache.commons.io.FilenameUtils
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.charset.Charset
 import java.nio.file.Files
+import org.apache.commons.exec.CommandLine
+import org.apache.commons.io.FilenameUtils
+import org.slf4j.LoggerFactory
 
 @Suppress("LongParameterList")
 object WinBashUtil {
@@ -174,15 +174,13 @@ object WinBashUtil {
         if (commonEnv.isNotEmpty()) {
             commonEnv.forEach { (name, value) ->
                 val clean = if (value.contains("\${{")) {
-                    value.replace(pattern) { "\\\${{${it.groups[1]?.value}}}" }
+                    value.replace("""\""", """\\""")
+                        .replace(pattern) { "\\\${{${it.groups[1]?.value}}}" }
                 } else {
-                    value
+                    value.replace("""\""", """\\""")
                 }
                 command.append(
-                    "export $name=\"${
-                        clean.replace("""\""", """\\""")
-                            .replace(""""""", """\"""")
-                    }\"\n"
+                    "export $name=\"${clean.replace(""""""", """\"""")}\"\n"
                 )
             }
         }

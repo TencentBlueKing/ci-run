@@ -166,15 +166,13 @@ object BashUtil {
         if (commonEnv.isNotEmpty()) {
             commonEnv.forEach { (name, value) ->
                 val clean = if (value.contains("\${{")) {
-                    value.replace(pattern) { "\\\${{${it.groups[1]?.value}}}" }
+                    value.replace("""\""", """\\""")
+                        .replace(pattern) { "\\\${{${it.groups[1]?.value}}}" }
                 } else {
-                    value
+                    value.replace("""\""", """\\""")
                 }
                 command.append(
-                    "export $name=\"${
-                        clean.replace("""\""", """\\""")
-                            .replace(""""""", """\"""")
-                    }\"\n"
+                    "export $name=\"${clean.replace(""""""", """\"""")}\"\n"
                 )
             }
         }
