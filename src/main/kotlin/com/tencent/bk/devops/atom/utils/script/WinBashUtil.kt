@@ -49,29 +49,29 @@ object WinBashUtil {
     //
     private const val setEnv =
         "setEnv(){\n" +
-            "        local key=\$1\n" +
-            "        local val=\$2\n" +
-            "\n" +
-            "        if [[ -z \"\$@\" ]]; then\n" +
-            "            return 0\n" +
-            "        fi\n" +
-            "\n" +
-            "        if ! echo \"\$key\" | grep -qE \"^[a-zA-Z_][a-zA-Z0-9_]*\$\"; then\n" +
-            "            echo \"[\$key] is invalid\" >&2\n" +
-            "            return 1\n" +
-            "        fi\n" +
-            "\n" +
-            "        echo \$key=\$val  >> ##resultFile##\n" +
-            "        export \$key=\"\$val\"\n" +
-            "    }\n"
+                "        local key=\$1\n" +
+                "        local val=\$2\n" +
+                "\n" +
+                "        if [[ -z \"\$@\" ]]; then\n" +
+                "            return 0\n" +
+                "        fi\n" +
+                "\n" +
+                "        if ! echo \"\$key\" | grep -qE \"^[a-zA-Z_][a-zA-Z0-9_]*\$\"; then\n" +
+                "            echo \"[\$key] is invalid\" >&2\n" +
+                "            return 1\n" +
+                "        fi\n" +
+                "\n" +
+                "        echo \$key=\$val  >> ##resultFile##\n" +
+                "        export \$key=\"\$val\"\n" +
+                "    }\n"
     private const val format_multiple_lines =
         "format_multiple_lines() {\n" +
-            "    local content=\$1\n" +
-            "    content=\"\${content//'%'/'%25'}\"\n" +
-            "    content=\"\${content//\$'\\n'/'%0A'}\"\n" +
-            "    content=\"\${content//\$'\\r'/'%0D'}\"\n" +
-            "    /bin/echo \"\$content\"|sed 's/\\\\n/%0A/g'|sed 's/\\\\r/%0D/g' >> ##resultFile##\n" +
-            "}\n"
+                "    local content=\$1\n" +
+                "    content=\"\${content//'%'/'%25'}\"\n" +
+                "    content=\"\${content//\$'\\n'/'%0A'}\"\n" +
+                "    content=\"\${content//\$'\\r'/'%0D'}\"\n" +
+                "    /bin/echo \"\$content\"|sed 's/\\\\n/%0A/g'|sed 's/\\\\r/%0D/g' >> ##resultFile##\n" +
+                "}\n"
     //
 //    private const val setGateValue = "setGateValue(){\n" +
 //        "        local key=\$1\n" +
@@ -178,7 +178,12 @@ object WinBashUtil {
                 } else {
                     value
                 }
-                command.append("export $name=\"${clean.replace(""""""", """\"""")}\"\n")
+                command.append(
+                    "export $name=\"${
+                        clean.replace("""\""", """\\""")
+                            .replace(""""""", """\"""")
+                    }\"\n"
+                )
             }
         }
         // not use

@@ -170,7 +170,12 @@ object BashUtil {
                 } else {
                     value
                 }
-                command.append("export $name=\"${clean.replace(""""""", """\"""")}\"\n")
+                command.append(
+                    "export $name=\"${
+                        clean.replace("""\""", """\\""")
+                            .replace(""""""", """\"""")
+                    }\"\n"
+                )
             }
         }
         if (buildEnvs.isNotEmpty()) {
