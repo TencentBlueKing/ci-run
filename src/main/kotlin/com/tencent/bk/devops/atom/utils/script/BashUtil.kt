@@ -89,7 +89,6 @@ object BashUtil {
 //    lateinit var buildEnvs: List<BuildEnv>
 
     private val specialKey = listOf(".", "-")
-    private val pattern = "\\$\\{\\{(.+?)}}".toRegex()
 
     //    private val specialValue = listOf("|", "&", "(", ")")
     private val logger = LoggerFactory.getLogger(BashUtil::class.java)
@@ -165,14 +164,8 @@ object BashUtil {
             .filterNot { specialEnv(it.key) || it.key in paramClassName }
         if (commonEnv.isNotEmpty()) {
             commonEnv.forEach { (name, value) ->
-                val clean = if (value.contains("\${{")) {
-                    value.replace("""\""", """\\""")
-                        .replace(pattern) { "\\\${{${it.groups[1]?.value}}}" }
-                } else {
-                    value.replace("""\""", """\\""")
-                }
                 command.append(
-                    "export $name=\"${clean.replace(""""""", """\"""")}\"\n"
+                    "export $name=\"${CommonUtil.replaceShellExportCommand(value)}\"\n"
                 )
             }
         }

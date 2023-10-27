@@ -29,7 +29,6 @@ package com.tencent.bk.devops.atom.utils.script
 
 import com.tencent.bk.devops.atom.enums.CharsetType
 import com.tencent.bk.devops.atom.exception.AtomException
-import com.tencent.bk.devops.atom.pojo.BuildEnv
 import com.tencent.bk.devops.atom.utils.CommandLineUtils
 import com.tencent.bk.devops.atom.utils.CommonUtil
 import com.tencent.bk.devops.atom.utils.ScriptEnvUtils
@@ -125,8 +124,10 @@ object WinBashUtil {
         val command = if (gitBashFile.exists()) {
             arrayOf("/c", "\"\"$DEFAULT_GIT_BASH_PATH\" --login -i -- $scriptPath\"")
         } else {
-            logger.warn("git-bash was not found in the default installation location, " +
-                "please add %YOUR_GIT_PATH%\\bin to the system environment variable path.")
+            logger.warn(
+                "git-bash was not found in the default installation location, " +
+                        "please add %YOUR_GIT_PATH%\\bin to the system environment variable path."
+            )
             arrayOf("/c", "\"bash --login -i -- $scriptPath\"")
         }
 
@@ -173,14 +174,8 @@ object WinBashUtil {
         val commonEnv = runtimeVariables.filterNot { specialEnv(it.key) || it.key in paramClassName }
         if (commonEnv.isNotEmpty()) {
             commonEnv.forEach { (name, value) ->
-                val clean = if (value.contains("\${{")) {
-                    value.replace("""\""", """\\""")
-                        .replace(pattern) { "\\\${{${it.groups[1]?.value}}}" }
-                } else {
-                    value.replace("""\""", """\\""")
-                }
                 command.append(
-                    "export $name=\"${clean.replace(""""""", """\"""")}\"\n"
+                    "export $name=\"${CommonUtil.replaceShellExportCommand(value)}\"\n"
                 )
             }
         }

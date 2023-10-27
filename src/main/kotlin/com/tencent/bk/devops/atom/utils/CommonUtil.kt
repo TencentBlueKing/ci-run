@@ -27,17 +27,18 @@
 
 package com.tencent.bk.devops.atom.utils
 
-import org.slf4j.LoggerFactory
-import sun.security.action.GetPropertyAction
 import java.io.File
 import java.nio.charset.Charset
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.security.AccessController
+import org.slf4j.LoggerFactory
+import sun.security.action.GetPropertyAction
 
 object CommonUtil {
 
     private val logger = LoggerFactory.getLogger(CommonUtil::class.java)
+    private val pattern = "\\$\\{\\{(.+?)}}".toRegex()
 
     /*统一打日志，debug信息用于问题排查*/
     fun printTempFileInfo(file: File, charset: Charset) {
@@ -66,6 +67,17 @@ object CommonUtil {
             }
         }
         return builder.toString()
+    }
+
+    fun replaceShellExportCommand(value: String): String {
+        val clean = if (value.contains("\${{")) {
+            value.replace("""\""", """\\""")
+                .replace(pattern) { "\\\${{${it.groups[1]?.value}}}" }
+        } else {
+            value.replace("""\""", """\\""")
+        }
+        return clean.replace(""""""", """\"""")
+            .replace("""`""", """\`""")
     }
 
     fun getTmpDir(): Path = Paths.get(AccessController.doPrivileged(GetPropertyAction("user.dir")))
