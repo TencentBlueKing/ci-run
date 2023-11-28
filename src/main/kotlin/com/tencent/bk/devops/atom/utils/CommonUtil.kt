@@ -69,15 +69,19 @@ object CommonUtil {
         return builder.toString()
     }
 
+//    fun replaceShellExportCommand(value: String): String {
+//        val clean = if (value.contains("\${{")) {
+//            value.replace("""\""", """\\""")
+//                .replace(pattern) { "\\\${{${it.groups[1]?.value}}}" }
+//        } else {
+//            value.replace("""\""", """\\""")
+//        }
+//        return clean.replace(""""""", """\"""")
+//            .replace("""`""", """\`""")
+//    }
+
     fun replaceShellExportCommand(value: String): String {
-        val clean = if (value.contains("\${{")) {
-            value.replace("""\""", """\\""")
-                .replace(pattern) { "\\\${{${it.groups[1]?.value}}}" }
-        } else {
-            value.replace("""\""", """\\""")
-        }
-        return clean.replace(""""""", """\"""")
-            .replace("""`""", """\`""")
+        return value.replace("""'""", """'\''""")
     }
 
     fun getTmpDir(): Path = Paths.get(AccessController.doPrivileged(GetPropertyAction("user.dir")))
