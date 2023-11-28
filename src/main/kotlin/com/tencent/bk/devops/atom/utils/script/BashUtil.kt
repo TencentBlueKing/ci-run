@@ -157,7 +157,7 @@ object BashUtil {
 
         // 设置系统环境变量
         systemEnvVariables?.forEach { (name, value) ->
-            command.append("export $name='${CommonUtil.replaceShellExportCommand(value)}'\n")
+            command.append("export $name=$value\n")
         }
 
         val commonEnv = runtimeVariables
@@ -165,7 +165,7 @@ object BashUtil {
         if (commonEnv.isNotEmpty()) {
             commonEnv.forEach { (name, value) ->
                 command.append(
-                    "export $name='${CommonUtil.replaceShellExportCommand(value)}'\n"
+                    "export $name=\"${CommonUtil.replaceShellExportCommand(value)}\"\n"
                 )
             }
         }
