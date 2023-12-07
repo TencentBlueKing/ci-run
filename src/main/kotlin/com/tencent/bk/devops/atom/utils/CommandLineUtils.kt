@@ -29,29 +29,35 @@ package com.tencent.bk.devops.atom.utils
 
 import com.tencent.bk.devops.atom.enums.CharsetType
 import com.tencent.bk.devops.atom.exception.AtomException
-import org.apache.commons.exec.CommandLine
-import org.apache.commons.exec.LogOutputStream
-import org.apache.commons.exec.PumpStreamHandler
-import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.nio.charset.Charset
 import java.util.regex.Matcher
 import java.util.regex.Pattern
+import org.apache.commons.exec.CommandLine
+import org.apache.commons.exec.LogOutputStream
+import org.apache.commons.exec.PumpStreamHandler
+import org.slf4j.LoggerFactory
 
 object CommandLineUtils {
 
     private val logger = LoggerFactory.getLogger(CommandLineUtils::class.java)
+
     /*OUTPUT_NAME 正则匹配规则*/
     private val OUTPUT_NAME = Pattern.compile("name=([^,:=\\s]*)")
+
     /*OUTPUT_TYPE 正则匹配规则*/
     private val OUTPUT_TYPE = Pattern.compile("type=([^,:=\\s]*)")
+
     /*OUTPUT_LABEL 正则匹配规则*/
     private val OUTPUT_LABEL = Pattern.compile("label=([^,:=\\s]*)")
+
     /*OUTPUT_PATH 正则匹配规则*/
     private val OUTPUT_PATH = Pattern.compile("path=([^,:=\\s]*)")
+
     /*OUTPUT_REPORT_TYPE 正则匹配规则*/
     private val OUTPUT_REPORT_TYPE = Pattern.compile("reportType=([^,:=\\s]*)")
+
     /*OUTPUT_GATE_TITLE 正则匹配规则*/
     private val OUTPUT_GATE_TITLE = Pattern.compile("title=([^,:=\\s]*)")
 
@@ -199,6 +205,10 @@ object CommandLineUtils {
         parseOutput(tmpLine)?.let {
             File(workspace, resultLogFile).appendText(it + "\n")
         }
+        /*写output到文件*/
+        appendRemarkToFile(tmpLine)?.let {
+            File(workspace, resultLogFile).appendText(it + "\n")
+        }
     }
 
     /*解析variable格式的变量*/
@@ -240,11 +250,23 @@ object CommandLineUtils {
             if (keyValue.size >= 2) {
                 // 以逗号为分隔符 左右依次为name type label path reportType
                 return "$nameMatcher," +
-                    "$typeMatcher," +
-                    "$labelMatcher," +
-                    "$pathMatcher," +
-                    "$reportTypeMatcher=${value.removePrefix("${keyValue[0]}::")}"
+                        "$typeMatcher," +
+                        "$labelMatcher," +
+                        "$pathMatcher," +
+                        "$reportTypeMatcher=${value.removePrefix("${keyValue[0]}::")}"
             }
+        }
+        return null
+    }
+
+    private fun appendRemarkToFile(
+        tmpLine: String
+    ): String? {
+        val pattenVar = "[\"]?::set-remark\\s.*"
+        val prefixVar = "::set-remark "
+        if (Pattern.matches(pattenVar, tmpLine)) {
+            val value = tmpLine.removeSurrounding("\"").removePrefix(prefixVar)
+            return "BK_CI_BUILD_REMARK=$value"
         }
         return null
     }
