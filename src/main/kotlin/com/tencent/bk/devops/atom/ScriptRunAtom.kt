@@ -159,6 +159,7 @@ If it succeeds locally, troubleshoot the build environment (such as environment 
                         buildId = buildId,
                         runtimeVariables = runtimeVariables,
                         dir = workspace,
+                        charsetType = charSetType,
                         paramClassName = paramClassName
                     )
                     /*powershell desktop脚本*/
