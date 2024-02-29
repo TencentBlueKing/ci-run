@@ -125,6 +125,17 @@ object PwshUtil {
                 command.append("Set-Item -Path Env:\\$name -Value '$value'\n")
             }
 
+        val charset = when (charsetType) {
+            CharsetType.UTF_8 -> Charsets.UTF_8
+            CharsetType.GBK -> Charset.forName(CharsetType.GBK.name)
+            else -> Charset.defaultCharset()
+        }
+        logger.info("The default charset is $charset")
+
+        if (charset == Charsets.UTF_8) {
+            command.append("[Console]::OutputEncoding = [System.Text.Encoding]::UTF8\r\n")
+        }
+
         command.append(
             setEnv.replace(
                 oldValue = "##resultFile##",
@@ -140,13 +151,6 @@ object PwshUtil {
             .append(script.replace("\n", "\r\n"))
             .append("\r\n")
             .append("exit")
-
-        val charset = when (charsetType) {
-            CharsetType.UTF_8 -> Charsets.UTF_8
-            CharsetType.GBK -> Charset.forName(CharsetType.GBK.name)
-            else -> Charset.defaultCharset()
-        }
-        logger.info("The default charset is $charset")
 
         file.writeText(command.toString(), charset)
         CommonUtil.printTempFileInfo(file, charset)
