@@ -239,22 +239,21 @@ object CommandLineUtils {
             /*正则匹配后做拆分处理*/
             val value = tmpLine.removeSurrounding("\"").removePrefix(prefixOutput)
 
-            val nameMatcher = getOutputMarcher(OUTPUT_NAME.matcher(value)) ?: ""
-            val typeMatcher = getOutputMarcher(OUTPUT_TYPE.matcher(value)) ?: "string" // type 默认为string
-            val labelMatcher = getOutputMarcher(OUTPUT_LABEL.matcher(value)) ?: ""
-            val pathMatcher = getOutputMarcher(OUTPUT_PATH.matcher(value)) ?: ""
-            val reportTypeMatcher = getOutputMarcher(OUTPUT_REPORT_TYPE.matcher(value)) ?: ""
-
-            /*对5种类型的标志位分别存储，互不干扰*/
             val keyValue = value.split("::")
-            if (keyValue.size >= 2) {
-                // 以逗号为分隔符 左右依次为name type label path reportType
-                return "$nameMatcher," +
-                        "$typeMatcher," +
-                        "$labelMatcher," +
-                        "$pathMatcher," +
-                        "$reportTypeMatcher=${value.removePrefix("${keyValue[0]}::")}"
-            }
+            if (keyValue.size < 2) return null
+            val key = keyValue[0]
+
+            val nameMatcher = getOutputMarcher(OUTPUT_NAME.matcher(key)) ?: ""
+            val typeMatcher = getOutputMarcher(OUTPUT_TYPE.matcher(key)) ?: "string" // type 默认为string
+            val labelMatcher = getOutputMarcher(OUTPUT_LABEL.matcher(key)) ?: ""
+            val pathMatcher = getOutputMarcher(OUTPUT_PATH.matcher(key)) ?: ""
+            val reportTypeMatcher = getOutputMarcher(OUTPUT_REPORT_TYPE.matcher(key)) ?: ""
+            // 以逗号为分隔符 左右依次为name type label path reportType
+            return "$nameMatcher," +
+                    "$typeMatcher," +
+                    "$labelMatcher," +
+                    "$pathMatcher," +
+                    "$reportTypeMatcher=${value.removePrefix("${keyValue[0]}::")}"
         }
         return null
     }
