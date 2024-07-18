@@ -53,5 +53,5 @@ format_multiple_lines "::set-output name=content2_a::$resultStr"
 python 示例：
 ```
 multiple_lines = "line one \n line two \n line three"
-print("::set-output name=lines::{0}".format(format_multiple_lines(multiple_lines)))
+format_multiple_lines("::set-output name=lines::{0}".format(multiple_lines))
 ```
