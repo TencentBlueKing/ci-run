@@ -45,7 +45,7 @@ object ManualScriptUtil {
 
     private val specialKey = listOf(".", "-")
 
-    private val filePathRegex = Pattern.compile("(\\./random_name\\.[a-zA-Z0-9]*)")
+    private val filePathRegex = Pattern.compile("(random_name\\.[a-zA-Z0-9]*)")
     private val logger = LoggerFactory.getLogger(ManualScriptUtil::class.java)
 
     fun execute(
