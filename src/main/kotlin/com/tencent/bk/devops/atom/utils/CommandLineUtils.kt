@@ -295,7 +295,7 @@ object CommandLineUtils {
         return null
     }
 
-    private fun getOutputMarcher(macher: Matcher): String? {
+    fun getOutputMarcher(macher: Matcher): String? {
         return with(macher) {
             /*只返回匹配到的第一个，否则返回null*/
             if (this.find()) {

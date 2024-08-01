@@ -17,6 +17,8 @@ class ScriptRunAtomParam : AtomBaseParam() {
     /*字符集类型*/
     @JsonProperty("charsetType")
     val charSetType: String = ""
+
+    val manualCommand: String = ""
     /*脚本类型*/
     val shell: String = ""
 }

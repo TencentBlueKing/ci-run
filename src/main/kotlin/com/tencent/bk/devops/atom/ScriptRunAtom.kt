@@ -28,17 +28,18 @@ import com.tencent.bk.devops.atom.utils.MessageUtil
 import com.tencent.bk.devops.atom.utils.ScriptEnvUtils
 import com.tencent.bk.devops.atom.utils.script.BashUtil
 import com.tencent.bk.devops.atom.utils.script.BatScriptUtil
+import com.tencent.bk.devops.atom.utils.script.ManualScriptUtil
 import com.tencent.bk.devops.atom.utils.script.PowerShellUtil
 import com.tencent.bk.devops.atom.utils.script.PwshUtil
 import com.tencent.bk.devops.atom.utils.script.PythonUtil
 import com.tencent.bk.devops.atom.utils.script.ShUtil
 import com.tencent.bk.devops.atom.utils.script.WinBashUtil
 import com.tencent.bk.devops.plugin.pojo.ErrorType
-import org.apache.commons.lang3.StringUtils
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLDecoder
 import java.nio.charset.Charset
+import org.apache.commons.lang3.StringUtils
+import org.slf4j.LoggerFactory
 
 /**
  * @version 1.0.0
@@ -182,6 +183,14 @@ If it succeeds locally, troubleshoot the build environment (such as environment 
                         stepId = param.stepId,
                         paramClassName = paramClassName
                     )
+
+                    ShellType.MANUAL -> ManualScriptUtil.execute(
+                        script = realCommand,
+                        startCommand = param.manualCommand,
+                        buildId = buildId,
+                        dir = workspace
+                    )
+
                     else -> {}
                 }
 
@@ -402,26 +411,26 @@ If it succeeds locally, troubleshoot the build environment (such as environment 
         map[key] = value.trim()
     }
 
-/*
-    private fun upsertIndicator(
-        userId: String,
-        projectId: String,
-        data: Map<String, String>
-    ) {
-        val indicatorCreates = data.map { (name, value) ->
-            val dataType = getQualityDataType(value)
-            IndicatorCreate(
-                name = name,
-                cnName = name,
-                desc = "",
-                dataType = dataType,
-                operation = getQualityOperations(dataType == QualityDataType.BOOLEAN),
-                threshold = value,
-                elementType = QUALITY_ELEMENT_TYPE
-            )
-        }
-        doUpsertIndicator(userId = userId, projectId = projectId, indicatorCreates = indicatorCreates)
-    }*/
+    /*
+        private fun upsertIndicator(
+            userId: String,
+            projectId: String,
+            data: Map<String, String>
+        ) {
+            val indicatorCreates = data.map { (name, value) ->
+                val dataType = getQualityDataType(value)
+                IndicatorCreate(
+                    name = name,
+                    cnName = name,
+                    desc = "",
+                    dataType = dataType,
+                    operation = getQualityOperations(dataType == QualityDataType.BOOLEAN),
+                    threshold = value,
+                    elementType = QUALITY_ELEMENT_TYPE
+                )
+            }
+            doUpsertIndicator(userId = userId, projectId = projectId, indicatorCreates = indicatorCreates)
+        }*/
 
     private fun updateIndicatorTitle(
         userId: String,
@@ -499,12 +508,12 @@ If it succeeds locally, troubleshoot the build environment (such as environment 
         )
     }
 
-/*
-    private fun getQualityOperations(isBoolean: Boolean) = if (isBoolean) {
-        QUALITY_BOOLEAN_OPERATIONS
-    } else {
-        QUALITY_ALL_OPERATIONS
-    }*/
+    /*
+        private fun getQualityOperations(isBoolean: Boolean) = if (isBoolean) {
+            QUALITY_BOOLEAN_OPERATIONS
+        } else {
+            QUALITY_ALL_OPERATIONS
+        }*/
 
     private fun saveQualityData(
         taskId: String,

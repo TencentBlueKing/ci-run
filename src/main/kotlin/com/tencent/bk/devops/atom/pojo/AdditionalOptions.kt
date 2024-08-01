@@ -61,7 +61,9 @@ enum class ShellType(val shellName: String) {
     /*windows 执行 bash*/
     WIN_BASH("win_bash"),
     /*按系统默认*/
-    AUTO("auto");
+    AUTO("auto"),
+    /*自由模式*/
+    MANUAL("manual");
 
     companion object {
         @Suppress("ReturnCount")
