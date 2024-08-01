@@ -188,7 +188,8 @@ If it succeeds locally, troubleshoot the build environment (such as environment 
                         script = realCommand,
                         startCommand = param.manualCommand,
                         buildId = buildId,
-                        dir = workspace
+                        dir = workspace,
+                        charSetType = charSetType
                     )
 
                     else -> {}

@@ -29,6 +29,8 @@ package com.tencent.bk.devops.atom.utils.script
 
 import com.tencent.bk.devops.atom.common.ErrorCode
 import com.tencent.bk.devops.atom.enums.CharsetType
+import com.tencent.bk.devops.atom.enums.OSType
+import com.tencent.bk.devops.atom.pojo.AgentEnv
 import com.tencent.bk.devops.atom.utils.CommandLineUtils
 import com.tencent.bk.devops.atom.utils.CommonUtil
 import com.tencent.bk.devops.plugin.exception.TaskExecuteException
@@ -55,7 +57,8 @@ object ManualScriptUtil {
         dir: File,
         prefix: String = "",
         errorMessage: String? = null,
-        print2Logger: Boolean = true
+        print2Logger: Boolean = true,
+        charSetType: CharsetType? = null
     ): String {
         val filePath = CommandLineUtils.getOutputMarcher(filePathRegex.matcher(startCommand))
         if (filePath.isNullOrBlank()) {
@@ -72,7 +75,8 @@ object ManualScriptUtil {
                     buildId = buildId,
                     script = script,
                     dir = dir,
-                    filePath = filePath
+                    filePath = filePath,
+                    charSetType = charSetType
                 ).canonicalPath
             ),
             sourceDir = dir,
@@ -80,7 +84,8 @@ object ManualScriptUtil {
             errorMessage = errorMessage,
             print2Logger = print2Logger,
             executeErrorMessage = "",
-            buildId = buildId
+            buildId = buildId,
+            charSetType = charSetType
         )
     }
 
@@ -89,7 +94,7 @@ object ManualScriptUtil {
         script: String,
         dir: File,
         filePath: String,
-        charSetType: CharsetType = CharsetType.UTF_8
+        charSetType: CharsetType? = CharsetType.UTF_8
     ): File {
         val file = Files.createTempFile(CommonUtil.getTmpDir(), "devops_script", filePath).toFile()
         file.deleteOnExit()
@@ -103,11 +108,14 @@ object ManualScriptUtil {
 
         file.writeText(script, charset)
 
-        executeUnixCommand(
-            command = "chmod +x ${file.absolutePath}",
-            sourceDir = dir,
-            buildId = buildId
-        )
+        if (AgentEnv.getOS() != OSType.WINDOWS) {
+            executeUnixCommand(
+                command = "chmod +x ${file.absolutePath}",
+                sourceDir = dir,
+                buildId = buildId,
+                charSetType = charSetType
+            )
+        }
         CommonUtil.printTempFileInfo(file, charset)
         return file
     }
@@ -119,7 +127,8 @@ object ManualScriptUtil {
         errorMessage: String? = null,
         print2Logger: Boolean = true,
         executeErrorMessage: String? = null,
-        buildId: String
+        buildId: String,
+        charSetType: CharsetType? = null
     ): String {
         try {
             return CommandLineUtils.execute(
