@@ -102,7 +102,7 @@
       "placeholder": "Please enter the startup command and parameters",
       "type": "vuex-input",
       "desc": "",
-      "required": false,
+      "required": true,
       "disabled": false,
       "hidden": false,
       "isSensitive": false,
