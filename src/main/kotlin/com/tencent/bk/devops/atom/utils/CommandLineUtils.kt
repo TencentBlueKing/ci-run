@@ -162,7 +162,7 @@ object CommandLineUtils {
             }
         }
         /*定义好输出流*/
-        executor.streamHandler = PumpStreamHandler(outputStream, errStream)
+        executor.streamHandler = PumpStreamHandler(outputStream, errStream).apply { setStopTimeout(10_000) }
         try {
             /*执行脚本*/
             val exitCode = executor.execute(cmdLine)
