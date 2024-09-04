@@ -61,10 +61,10 @@ class CommandLineExecutor : DefaultExecutor() {
      * @throws IOException executing the process failed
      */
     private fun executeInternal(
-        command: CommandLine,
-        environment: Map<String, String>?,
-        dir: File,
-        streams: ExecuteStreamHandler
+            command: CommandLine,
+            environment: Map<String, String>?,
+            dir: File,
+            streams: ExecuteStreamHandler
     ): Int {
 
         setExceptionCaught(null)
@@ -120,7 +120,7 @@ class CommandLineExecutor : DefaultExecutor() {
             closeProcessStreams(process)
 
             if (getExceptionCaught() != null) {
-                throw getExceptionCaught()!!
+                logger.debug("stream close fail", getExceptionCaught())
             }
 
             if (watchdog != null) {
