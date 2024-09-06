@@ -29,18 +29,30 @@ package com.tencent.bk.devops.atom.utils
 
 import com.tencent.bk.devops.atom.enums.CharsetType
 import com.tencent.bk.devops.atom.exception.AtomException
+import com.tencent.bk.devops.plugin.pojo.ErrorType
+import org.apache.commons.exec.CommandLine
+import org.apache.commons.exec.PumpStreamHandler
+import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.nio.charset.Charset
+import java.util.*
+import java.util.concurrent.SynchronousQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import java.util.regex.Matcher
 import java.util.regex.Pattern
-import org.apache.commons.exec.CommandLine
 import org.apache.commons.exec.LogOutputStream
-import org.apache.commons.exec.PumpStreamHandler
-import org.slf4j.LoggerFactory
 
 object CommandLineUtils {
+    /*一级队列保证日志输出，不阻塞子进程*/
+    val outQueueFLevel: Queue<String> = LinkedList()
 
+    /*二级队列对输出进行处理，不阻塞日志输出*/
+    private val outQueueSLevel: Queue<String> = LinkedList()
+    private val errQueueFLevel: Queue<String> = LinkedList()
+    private val errQueueSLevel: Queue<String> = LinkedList()
+    private const val MAXIMUM_POOL_SIZE = 100
     private val logger = LoggerFactory.getLogger(CommandLineUtils::class.java)
 
     /*OUTPUT_NAME 正则匹配规则*/
@@ -63,19 +75,31 @@ object CommandLineUtils {
 
     private val lineParser = listOf(OauthCredentialLineParser())
 
+    class TaskRunContext {
+        lateinit var tasKName: String
+        lateinit var outTaskFLevel: Runnable
+        lateinit var outTaskSLevel: Runnable
+        lateinit var errTaskFLevel: Runnable
+        lateinit var errTaskSLevel: Runnable
+        var close: Boolean = false
+        fun outTaskSLevelInit() = this::outTaskSLevel.isInitialized
+        fun errTaskSLevelInit() = this::errTaskSLevel.isInitialized
+    }
+
+
     @Suppress("LongParameterList")
     fun execute(
-        cmdLine: CommandLine,
-        workspace: File?,
-        print2Logger: Boolean,
-        prefix: String = "",
-        executeErrorMessage: String? = null,
-        buildId: String,
-        charSetType: CharsetType? = null
+            cmdLine: CommandLine,
+            workspace: File?,
+            print2Logger: Boolean,
+            prefix: String = "",
+            executeErrorMessage: String? = null,
+            buildId: String,
+            charSetType: CharsetType? = null,
+            context: TaskRunContext = TaskRunContext()
     ): String {
-        /*result 用于装载返回信息*/
-        val result = StringBuilder()
-        logger.debug("will execute command >>> $cmdLine")
+        logger.debug("will execute command >>> ${cmdLine.toStrings().joinToString()}")
+        context.tasKName = cmdLine.toStrings().joinToString()
 
         /*解析命令*/
         /*生成executor*/
@@ -98,96 +122,233 @@ object CommandLineUtils {
             else -> Charset.defaultCharset().name()
         }
         /*定义output标准输出流*/
-        val outputStream = object : LogOutputStream() {
-            override fun processBuffer() {
-                val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
-                privateStringField.isAccessible = true
-                /*反射拿到buffer 解决字符集编码问题*/
-                val buffer = privateStringField.get(this) as ByteArrayOutputStream
-                processLine(buffer.toString(charset))
-                /*手动reset*/
-                buffer.reset()
-            }
-
-            override fun processLine(line: String?, level: Int) {
-                if (line == null)
-                    return
-
-                /*补齐前缀*/
-                var tmpLine: String = prefix + line
-
-                lineParser.forEach {
-                    /*做日志脱敏*/
-                    tmpLine = it.onParseLine(tmpLine)
+        val outputStream = object : RunOutputStream(charset) {
+            override fun processLine(line: String, lineCount: Int) {
+                synchronized(outQueueFLevel) {
+                    outQueueFLevel.add(line)
                 }
-                if (print2Logger) {
-                    /*提取特殊内容到文件进行持久化存储并输出到上下文*/
-                    appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine)
-                }
-                println(tmpLine)
-                /*装载result*/
-                result.append(tmpLine).append("\n")
             }
         }
         /*定义error输出流*/
-        val errStream = object : LogOutputStream() {
-            override fun processBuffer() {
-                val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
-                privateStringField.isAccessible = true
-                /*反射拿到buffer 解决字符集编码问题*/
-                val buffer = privateStringField.get(this) as ByteArrayOutputStream
-                processLine(buffer.toString(charset))
-                /*手动reset*/
-                buffer.reset()
-            }
-
-            override fun processLine(line: String?, level: Int) {
-                if (line == null)
-                    return
-
-                /*补齐前缀*/
-                var tmpLine: String = prefix + line
-
-                lineParser.forEach {
-                    /*做日志脱敏*/
-                    tmpLine = it.onParseLine(tmpLine)
+        val errStream = object : RunOutputStream(charset) {
+            override fun processLine(line: String, lineCount: Int) {
+                synchronized(errQueueFLevel) {
+                    errQueueFLevel.add(line)
                 }
-                if (print2Logger) {
-                    /*提取特殊内容到文件进行持久化存储并输出到上下文*/
-                    appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine)
-                }
-                logger.error(tmpLine)
-                /*装载result*/
-                result.append(tmpLine).append("\n")
             }
         }
         /*定义好输出流*/
         executor.streamHandler = PumpStreamHandler(outputStream, errStream).apply { setStopTimeout(10_000) }
+        var exitCode: Int = -1
         try {
+            dealWithStdout(prefix = prefix,
+                    print2Logger = print2Logger,
+                    executor = executor,
+                    contextLogFile = contextLogFile,
+                    context = context)
+            dealWithStderr(prefix = prefix,
+                    print2Logger = print2Logger,
+                    executor = executor,
+                    contextLogFile = contextLogFile,
+                    context = context)
+            adjusterTask(context)
             /*执行脚本*/
-            val exitCode = executor.execute(cmdLine)
+            exitCode = executor.execute(cmdLine)
             if (exitCode != 0) {
                 /*执行返回码，非零表示执行出错，这时直接抛错。为用户自己的脚本问题*/
                 throw AtomException(
-                    "$prefix Script command execution failed with exit code($exitCode)"
+                        "$prefix Script command execution failed with exit code($exitCode)"
                 )
             }
         } catch (ignored: Throwable) {
             /*对其余异常兜底处理，可能是执行脚本时抛错的错。*/
             val errorMessage = executeErrorMessage ?: "Fail to execute the command"
-            logger.warn(errorMessage)
+            logger.warn(errorMessage, ignored)
             throw AtomException(
-                ignored.message ?: ""
+                    ignored.message ?: ""
             )
+        } finally {
+            logger.debug("sub process return $exitCode")
+            closeExecutor(context)
         }
-        return result.toString()
+        return exitCode.toString()
+    }
+
+    private val threadPoolExecutor = ThreadPoolExecutor(
+            5,
+            MAXIMUM_POOL_SIZE,
+            1L,
+            TimeUnit.SECONDS,
+            SynchronousQueue()
+    )
+
+    fun shutdownThreadPool() {
+        threadPoolExecutor.shutdownNow()
+        try {
+            // 等待线程池终止
+            if (!threadPoolExecutor.awaitTermination(60, TimeUnit.SECONDS)) {
+                logger.debug("线程池未能在60秒内终止")
+            }
+        } catch (interruptedException: InterruptedException) {
+            logger.debug("等待线程池终止时被中断")
+            Thread.currentThread().interrupt()
+        }
+    }
+
+    private fun closeExecutor(context: TaskRunContext) {
+        val thread = Thread {
+            while (true) {
+                if (outQueueFLevel.isEmpty() &&
+                        outQueueSLevel.isEmpty() &&
+                        errQueueFLevel.isEmpty() &&
+                        errQueueSLevel.isEmpty()) {
+                    break
+                }
+                logger.debug("threadPoolExecutor need shutdown|${outQueueFLevel.size}|${outQueueSLevel.size}|" +
+                        "${errQueueFLevel.size}|${errQueueSLevel.size}")
+                try {
+                    Thread.sleep(50)
+                } catch (e: InterruptedException) {
+                    break
+                }
+            }
+        }
+        thread.start()
+        kotlin.runCatching {
+            thread.join(60_000) // 等待1分钟
+            context.close = true
+            if (thread.isAlive) {
+                logger.debug("Operation timed out")
+                thread.interrupt() // 中断线程
+                logger.debug("Operation timed out shutdownNow successfully")
+            } else {
+                logger.debug("Streams stopped successfully")
+            }
+        }
+    }
+
+    private fun dealWithStdout(prefix: String,
+                               print2Logger: Boolean,
+                               executor: CommandLineExecutor,
+                               contextLogFile: String?,
+                               context: TaskRunContext) {
+        val taskF = Runnable {
+            while (true) {
+                if (context.close) break
+                val line: String?
+                synchronized(outQueueFLevel) {
+                    line = outQueueFLevel.poll()
+                }
+                if (line != null) {
+                    /*补齐前缀*/
+                    val tmpLine: String = prefix + line
+                    println(tmpLine)
+                    synchronized(outQueueSLevel) {
+                        outQueueSLevel.add(tmpLine)
+                    }
+                }
+            }
+        }
+        context.outTaskFLevel = taskF
+        threadPoolExecutor.execute(taskF)
+        val taskS = Runnable {
+            while (true) {
+                if (context.close) break
+                val line: String?
+                synchronized(outQueueSLevel) {
+                    line = outQueueSLevel.poll()
+                }
+                if (line != null) {
+                    if (print2Logger) {
+                        /*提取特殊内容到文件进行持久化存储并输出到上下文*/
+                        appendResultToFile(executor.workingDirectory, contextLogFile, line)
+                    }
+                }
+            }
+        }
+        context.outTaskSLevel = taskS
+        threadPoolExecutor.execute(taskS)
+    }
+
+    private fun dealWithStderr(prefix: String,
+                               print2Logger: Boolean,
+                               executor: CommandLineExecutor,
+                               contextLogFile: String?,
+                               context: TaskRunContext) {
+        val taskF = Runnable {
+            while (true) {
+                if (context.close) break
+                val line: String?
+                synchronized(errQueueFLevel) {
+                    line = errQueueFLevel.poll()
+                }
+                if (line != null) {
+                    /*补齐前缀*/
+                    val tmpLine: String = prefix + line
+                    logger.error(tmpLine)
+                    synchronized(errQueueSLevel) {
+                        errQueueSLevel.add(tmpLine)
+                    }
+                }
+            }
+        }
+        context.errTaskFLevel = taskF
+        threadPoolExecutor.execute(taskF)
+        val taskS = Runnable {
+            while (true) {
+                if (context.close) break
+                val line: String?
+                synchronized(errQueueSLevel) {
+                    line = errQueueSLevel.poll()
+                }
+                if (line != null) {
+                    if (print2Logger) {
+                        /*提取特殊内容到文件进行持久化存储并输出到上下文*/
+                        appendResultToFile(executor.workingDirectory, contextLogFile, line)
+                    }
+                }
+            }
+        }
+        context.errTaskSLevel = taskS
+        threadPoolExecutor.execute(taskS)
+    }
+
+    private fun adjusterTask(context: TaskRunContext) {
+        // 动态调整线程池大小的任务
+        val adjusterTask = Runnable {
+            while (true) {
+                if (context.close) break
+                if (context.outTaskSLevelInit()) {
+                    adjuster(context.outTaskSLevel, outQueueSLevel)
+                }
+                if (context.errTaskSLevelInit()) {
+                    adjuster(context.errTaskSLevel, errQueueSLevel)
+                }
+                try {
+                    Thread.sleep(1000)
+                } catch (e: InterruptedException) {
+                    break
+                }
+            }
+        }
+
+        // 向线程池提交调整任务
+        threadPoolExecutor.execute(adjusterTask)
+    }
+
+    private fun adjuster(task: Runnable, queue: Queue<String>) {
+        val queueSize = queue.size
+        if (queueSize > 100 * threadPoolExecutor.poolSize && threadPoolExecutor.poolSize < MAXIMUM_POOL_SIZE) {
+            logger.debug("Increasing thread pool size|${threadPoolExecutor.poolSize}")
+            threadPoolExecutor.execute(task)
+        }
     }
 
     /*写内容到文件*/
     private fun appendResultToFile(
-        workspace: File?,
-        resultLogFile: String?,
-        tmpLine: String
+            workspace: File?,
+            resultLogFile: String?,
+            tmpLine: String
     ) {
         /*写入红线指标信息*/
         parseGate(tmpLine)?.let {
@@ -213,7 +374,7 @@ object CommandLineUtils {
 
     /*解析variable格式的变量*/
     fun parseVariable(
-        tmpLine: String
+            tmpLine: String
     ): String? {
         /*相应匹配规则*/
         val pattenVar = "[\"]?::set-variable\\sname=.*"
@@ -230,7 +391,7 @@ object CommandLineUtils {
     }
 
     fun parseOutput(
-        tmpLine: String
+            tmpLine: String
     ): String? {
         /*相应匹配规则*/
         val pattenOutput = "[\"]?::set-output\\s(.*)"
@@ -259,7 +420,7 @@ object CommandLineUtils {
     }
 
     private fun appendRemarkToFile(
-        tmpLine: String
+            tmpLine: String
     ): String? {
         val pattenVar = "[\"]?::set-remark\\s.*"
         val prefixVar = "::set-remark "
@@ -271,7 +432,7 @@ object CommandLineUtils {
     }
 
     fun parseGate(
-        tmpLine: String
+            tmpLine: String
     ): String? {
         /*相应匹配规则*/
         val pattenOutput = "[\"]?::set-gate-value\\s(.*)"

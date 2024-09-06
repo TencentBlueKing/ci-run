@@ -228,6 +228,7 @@ If it succeeds locally, troubleshoot the build environment (such as environment 
                     URLDecoder.decode(mes, Charsets.UTF_8.name())
                 )
             } finally {
+                CommandLineUtils.shutdownThreadPool()
                 // 写入上下文
                 ScriptEnvUtils.getContext(buildId, workspace).plus(
                     parseContextFromMultiLine(
