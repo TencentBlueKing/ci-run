@@ -200,7 +200,6 @@ If it succeeds locally, troubleshoot the build environment (such as environment 
             } catch (taskError: AtomException) {
                 /*处理普通异常，这里是脚本逻辑抛出的异常*/
                 logger.warn("Fail to run the script task")
-                logger.debug("TaskExecuteException|${taskError.message}", taskError)
                 result.status = Status.failure
                 result.message = "$osType script execution failed"
                 val mes = MessageUtil.getMessageByLocale(

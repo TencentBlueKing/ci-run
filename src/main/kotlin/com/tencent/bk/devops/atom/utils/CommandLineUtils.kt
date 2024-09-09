@@ -27,6 +27,8 @@
 
 package com.tencent.bk.devops.atom.utils
 
+import com.google.common.collect.EvictingQueue
+import com.tencent.bk.devops.atom.common.ErrorCode
 import com.tencent.bk.devops.atom.enums.CharsetType
 import com.tencent.bk.devops.atom.exception.AtomException
 import com.tencent.bk.devops.plugin.pojo.ErrorType
@@ -73,6 +75,8 @@ object CommandLineUtils {
     private val OUTPUT_GATE_TITLE = Pattern.compile("title=([^,:=\\s]*)")
 
     private val lineParser = listOf(OauthCredentialLineParser())
+    private const val PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX = 3700
+    private const val success = "0"
 
     class TaskRunContext {
         lateinit var tasKName: String
@@ -99,7 +103,7 @@ object CommandLineUtils {
     ): String {
         logger.debug("will execute command >>> ${cmdLine.toStrings().joinToString()}")
         context.tasKName = cmdLine.toStrings().joinToString()
-
+        val errString: EvictingQueue<Char> = EvictingQueue.create(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX)
         /*解析命令*/
         /*生成executor*/
         val executor = CommandLineExecutor()
@@ -145,16 +149,11 @@ object CommandLineUtils {
                     print2Logger = print2Logger,
                     executor = executor,
                     contextLogFile = contextLogFile,
-                    context = context)
+                    context = context,
+                    errString = errString)
             adjusterTask(context)
             /*执行脚本*/
             exitCode = executor.execute(cmdLine)
-            if (exitCode != 0) {
-                /*执行返回码，非零表示执行出错，这时直接抛错。为用户自己的脚本问题*/
-                throw AtomException(
-                        "$prefix Script command execution failed with exit code($exitCode)"
-                )
-            }
         } catch (ignored: Throwable) {
             /*对其余异常兜底处理，可能是执行脚本时抛错的错。*/
             val errorMessage = executeErrorMessage ?: "Fail to execute the command"
@@ -166,7 +165,17 @@ object CommandLineUtils {
             logger.debug("sub process return $exitCode")
             closeExecutor(context)
         }
-        return exitCode.toString()
+        if (exitCode != 0) {
+            /*执行返回码，非零表示执行出错，这时直接抛错。为用户自己的脚本问题*/
+            throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
+                    errorType = ErrorType.USER,
+                    errorMsg = "$prefix Script command execution failed with exit code($exitCode) \n" +
+                            "Error message tracking:\n" +
+                            errString.joinToString("")
+            )
+        }
+        return success
     }
 
     private val threadPoolExecutor = ThreadPoolExecutor(
@@ -193,17 +202,17 @@ object CommandLineUtils {
     private fun closeExecutor(context: TaskRunContext) {
         val thread = Thread {
             while (true) {
-                if (outQueueFLevel.isEmpty() &&
-                        outQueueSLevel.isEmpty() &&
-                        errQueueFLevel.isEmpty() &&
-                        errQueueSLevel.isEmpty()) {
-                    break
-                }
                 logger.debug("threadPoolExecutor need shutdown|${outQueueFLevel.size}|${outQueueSLevel.size}|" +
                         "${errQueueFLevel.size}|${errQueueSLevel.size}")
                 try {
                     Thread.sleep(50)
                 } catch (e: InterruptedException) {
+                    break
+                }
+                if (outQueueFLevel.isEmpty() &&
+                        outQueueSLevel.isEmpty() &&
+                        errQueueFLevel.isEmpty() &&
+                        errQueueSLevel.isEmpty()) {
                     break
                 }
             }
@@ -230,12 +239,13 @@ object CommandLineUtils {
         val taskF = Runnable {
             while (true) {
                 if (context.close) break
-                val line: String? = outQueueFLevel.poll()
+                val line: String? = outQueueFLevel.peek()
                 if (line != null) {
                     /*补齐前缀*/
                     val tmpLine: String = prefix + line
                     println(tmpLine)
                     outQueueSLevel.add(tmpLine)
+                    outQueueFLevel.poll()
                 }
             }
         }
@@ -261,16 +271,21 @@ object CommandLineUtils {
                                print2Logger: Boolean,
                                executor: CommandLineExecutor,
                                contextLogFile: String?,
-                               context: TaskRunContext) {
+                               context: TaskRunContext,
+                               errString: EvictingQueue<Char>
+    ) {
         val taskF = Runnable {
             while (true) {
                 if (context.close) break
-                val line: String? = errQueueFLevel.poll()
+                val line: String? = errQueueFLevel.peek()
                 if (line != null) {
                     /*补齐前缀*/
                     val tmpLine: String = prefix + line
                     logger.error(tmpLine)
+                    errString.addAll(tmpLine.toList())
+                    errString.add('\n')
                     errQueueSLevel.add(tmpLine)
+                    errQueueFLevel.poll()
                 }
             }
         }
