@@ -33,7 +33,6 @@ import com.tencent.bk.devops.plugin.pojo.ErrorType
 import org.apache.commons.exec.CommandLine
 import org.apache.commons.exec.PumpStreamHandler
 import org.slf4j.LoggerFactory
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.nio.charset.Charset
 import java.util.*
@@ -42,16 +41,16 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.regex.Matcher
 import java.util.regex.Pattern
-import org.apache.commons.exec.LogOutputStream
+import java.util.concurrent.ConcurrentLinkedQueue
 
 object CommandLineUtils {
     /*一级队列保证日志输出，不阻塞子进程*/
-    val outQueueFLevel: Queue<String> = LinkedList()
+    val outQueueFLevel: ConcurrentLinkedQueue<String> = ConcurrentLinkedQueue()
 
     /*二级队列对输出进行处理，不阻塞日志输出*/
-    private val outQueueSLevel: Queue<String> = LinkedList()
-    private val errQueueFLevel: Queue<String> = LinkedList()
-    private val errQueueSLevel: Queue<String> = LinkedList()
+    private val outQueueSLevel: ConcurrentLinkedQueue<String> = ConcurrentLinkedQueue()
+    private val errQueueFLevel: ConcurrentLinkedQueue<String> = ConcurrentLinkedQueue()
+    private val errQueueSLevel: ConcurrentLinkedQueue<String> = ConcurrentLinkedQueue()
     private const val MAXIMUM_POOL_SIZE = 100
     private val logger = LoggerFactory.getLogger(CommandLineUtils::class.java)
 
@@ -124,17 +123,13 @@ object CommandLineUtils {
         /*定义output标准输出流*/
         val outputStream = object : RunOutputStream(charset) {
             override fun processLine(line: String, lineCount: Int) {
-                synchronized(outQueueFLevel) {
-                    outQueueFLevel.add(line)
-                }
+                outQueueFLevel.add(line)
             }
         }
         /*定义error输出流*/
         val errStream = object : RunOutputStream(charset) {
             override fun processLine(line: String, lineCount: Int) {
-                synchronized(errQueueFLevel) {
-                    errQueueFLevel.add(line)
-                }
+                errQueueFLevel.add(line)
             }
         }
         /*定义好输出流*/
@@ -215,7 +210,7 @@ object CommandLineUtils {
         }
         thread.start()
         kotlin.runCatching {
-            thread.join(60_000) // 等待1分钟
+            thread.join(300_000) // 等待5分钟
             context.close = true
             if (thread.isAlive) {
                 logger.debug("Operation timed out")
@@ -235,17 +230,12 @@ object CommandLineUtils {
         val taskF = Runnable {
             while (true) {
                 if (context.close) break
-                val line: String?
-                synchronized(outQueueFLevel) {
-                    line = outQueueFLevel.poll()
-                }
+                val line: String? = outQueueFLevel.poll()
                 if (line != null) {
                     /*补齐前缀*/
                     val tmpLine: String = prefix + line
                     println(tmpLine)
-                    synchronized(outQueueSLevel) {
-                        outQueueSLevel.add(tmpLine)
-                    }
+                    outQueueSLevel.add(tmpLine)
                 }
             }
         }
@@ -254,10 +244,7 @@ object CommandLineUtils {
         val taskS = Runnable {
             while (true) {
                 if (context.close) break
-                val line: String?
-                synchronized(outQueueSLevel) {
-                    line = outQueueSLevel.poll()
-                }
+                val line: String? = outQueueSLevel.poll()
                 if (line != null) {
                     if (print2Logger) {
                         /*提取特殊内容到文件进行持久化存储并输出到上下文*/
@@ -278,17 +265,12 @@ object CommandLineUtils {
         val taskF = Runnable {
             while (true) {
                 if (context.close) break
-                val line: String?
-                synchronized(errQueueFLevel) {
-                    line = errQueueFLevel.poll()
-                }
+                val line: String? = errQueueFLevel.poll()
                 if (line != null) {
                     /*补齐前缀*/
                     val tmpLine: String = prefix + line
                     logger.error(tmpLine)
-                    synchronized(errQueueSLevel) {
-                        errQueueSLevel.add(tmpLine)
-                    }
+                    errQueueSLevel.add(tmpLine)
                 }
             }
         }
@@ -297,10 +279,7 @@ object CommandLineUtils {
         val taskS = Runnable {
             while (true) {
                 if (context.close) break
-                val line: String?
-                synchronized(errQueueSLevel) {
-                    line = errQueueSLevel.poll()
-                }
+                val line: String? = errQueueSLevel.poll()
                 if (line != null) {
                     if (print2Logger) {
                         /*提取特殊内容到文件进行持久化存储并输出到上下文*/
