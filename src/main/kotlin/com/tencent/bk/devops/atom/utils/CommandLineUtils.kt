@@ -246,6 +246,12 @@ object CommandLineUtils {
                     println(tmpLine)
                     outQueueSLevel.add(tmpLine)
                     outQueueFLevel.poll()
+                } else {
+                    try {
+                        Thread.sleep(10)
+                    } catch (e: InterruptedException) {
+                        break
+                    }
                 }
             }
         }
@@ -259,6 +265,12 @@ object CommandLineUtils {
                     if (print2Logger) {
                         /*提取特殊内容到文件进行持久化存储并输出到上下文*/
                         appendResultToFile(executor.workingDirectory, contextLogFile, line)
+                    }
+                } else {
+                    try {
+                        Thread.sleep(10)
+                    } catch (e: InterruptedException) {
+                        break
                     }
                 }
             }
@@ -286,6 +298,12 @@ object CommandLineUtils {
                     errString.add('\n')
                     errQueueSLevel.add(tmpLine)
                     errQueueFLevel.poll()
+                } else {
+                    try {
+                        Thread.sleep(10)
+                    } catch (e: InterruptedException) {
+                        break
+                    }
                 }
             }
         }
@@ -299,6 +317,12 @@ object CommandLineUtils {
                     if (print2Logger) {
                         /*提取特殊内容到文件进行持久化存储并输出到上下文*/
                         appendResultToFile(executor.workingDirectory, contextLogFile, line)
+                    }
+                } else {
+                    try {
+                        Thread.sleep(10)
+                    } catch (e: InterruptedException) {
+                        break
                     }
                 }
             }
