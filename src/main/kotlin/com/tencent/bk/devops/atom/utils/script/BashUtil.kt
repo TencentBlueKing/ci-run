@@ -247,6 +247,7 @@ object BashUtil {
             )
         }
         CommonUtil.printTempFileInfo(file, charset)
+        CommonUtil.printTempFileInfo(userScriptFile, charset)
         return file
     }
 
