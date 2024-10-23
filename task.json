@@ -6,7 +6,7 @@
     "language": "java",
     "minimumVersion": "1.8",
     "demands": [],
-    "target": "$bk_java_path -jar run-jar-with-dependencies.jar"
+    "target": "java -jar run-jar-with-dependencies.jar"
   },
   "releaseInfo": {
     "projectId": "demo",

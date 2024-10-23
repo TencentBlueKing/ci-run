@@ -223,7 +223,7 @@ object BashUtil {
 //        command.append(
 //            setGateValue.replace(oldValue = "##gateValueFile##",
 //            newValue = File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath))
-        command.append(". ${userScriptFile.absolutePath}")
+        command.append(". ${userScriptFile.absolutePath} < /dev/null")
         val charset = when (charSetType) {
             CharsetType.UTF_8 -> Charsets.UTF_8
             CharsetType.GBK -> Charset.forName(CharsetType.GBK.name)
@@ -260,6 +260,7 @@ object BashUtil {
         executeErrorMessage: String? = null,
         buildId: String
     ): String {
+        logger.debug("start bash,command:$command")
         try {
             return CommandLineUtils.execute(
                 cmdLine = CommandLine.parse(command),

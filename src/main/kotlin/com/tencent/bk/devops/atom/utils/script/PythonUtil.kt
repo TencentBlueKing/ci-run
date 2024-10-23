@@ -138,7 +138,17 @@ object PythonUtil {
         val file = Files.createTempFile(CommonUtil.getTmpDir(), "devops_script", ".py").toFile()
         file.deleteOnExit()
 
+        val charset = when (charSetType) {
+            CharsetType.UTF_8 -> Charsets.UTF_8
+            CharsetType.GBK -> Charset.forName(CharsetType.GBK.name)
+            else -> Charset.defaultCharset()
+        }
+        logger.info("The default charset is $charset")
         val command = StringBuilder()
+
+        if (charset == Charsets.UTF_8) {
+            command.append("# -*- coding: utf-8 -*-\n")
+        }
 
         command.append("import os\n")
             .append("os.environ['WORKSPACE']=\"${StringEscapeUtils.escapeJava(workspace.absolutePath)}\"\n")
@@ -205,12 +215,6 @@ object PythonUtil {
 //            newValue = File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath))
         command.append(script)
 
-        val charset = when (charSetType) {
-            CharsetType.UTF_8 -> Charsets.UTF_8
-            CharsetType.GBK -> Charset.forName(CharsetType.GBK.name)
-            else -> Charset.defaultCharset()
-        }
-        logger.info("The default charset is $charset")
 
         file.writeText(command.toString(), charset)
 

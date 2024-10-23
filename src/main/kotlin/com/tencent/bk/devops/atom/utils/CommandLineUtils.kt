@@ -393,11 +393,11 @@ object CommandLineUtils {
             tmpLine: String
     ): String? {
         /*相应匹配规则*/
-        val pattenVar = "[\"]?::set-variable\\sname=.*"
+        val pattenVar = "[\"\']?::set-variable\\sname=.*"
         val prefixVar = "::set-variable name="
         if (Pattern.matches(pattenVar, tmpLine)) {
             /*正则匹配后做拆分处理*/
-            val value = tmpLine.removeSurrounding("\"").removePrefix(prefixVar)
+            val value = tmpLine.removeSurrounding("\"").removeSurrounding("\'").removePrefix(prefixVar)
             val keyValue = value.split("::")
             if (keyValue.size >= 2) {
                 return "variables.${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}"
@@ -410,11 +410,11 @@ object CommandLineUtils {
             tmpLine: String
     ): String? {
         /*相应匹配规则*/
-        val pattenOutput = "[\"]?::set-output\\s(.*)"
+        val pattenOutput = "[\"\']?::set-output\\s(.*)"
         val prefixOutput = "::set-output "
         if (Pattern.matches(pattenOutput, tmpLine)) {
             /*正则匹配后做拆分处理*/
-            val value = tmpLine.removeSurrounding("\"").removePrefix(prefixOutput)
+            val value = tmpLine.removeSurrounding("\"").removeSurrounding("\'").removePrefix(prefixOutput)
 
             val keyValue = value.split("::")
             if (keyValue.size < 2) return null
@@ -438,10 +438,10 @@ object CommandLineUtils {
     private fun appendRemarkToFile(
             tmpLine: String
     ): String? {
-        val pattenVar = "[\"]?::set-remark\\s.*"
+        val pattenVar = "[\"\']?::set-remark\\s.*"
         val prefixVar = "::set-remark "
         if (Pattern.matches(pattenVar, tmpLine)) {
-            val value = tmpLine.removeSurrounding("\"").removePrefix(prefixVar)
+            val value = tmpLine.removeSurrounding("\"").removeSurrounding("\'").removePrefix(prefixVar)
             return "BK_CI_BUILD_REMARK=$value"
         }
         return null
@@ -451,11 +451,11 @@ object CommandLineUtils {
             tmpLine: String
     ): String? {
         /*相应匹配规则*/
-        val pattenOutput = "[\"]?::set-gate-value\\s(.*)"
+        val pattenOutput = "[\"\']?::set-gate-value\\s(.*)"
         val prefixOutput = "::set-gate-value "
         if (Pattern.matches(pattenOutput, tmpLine)) {
             /*正则匹配后做拆分处理*/
-            val value = tmpLine.removeSurrounding("\"").removePrefix(prefixOutput)
+            val value = tmpLine.removeSurrounding("\"").removeSurrounding("\'").removePrefix(prefixOutput)
             val name = getOutputMarcher(OUTPUT_NAME.matcher(value))
             val title = getOutputMarcher(OUTPUT_GATE_TITLE.matcher(value))
             /*对2种类型的标志位分别存储，互不干扰*/
