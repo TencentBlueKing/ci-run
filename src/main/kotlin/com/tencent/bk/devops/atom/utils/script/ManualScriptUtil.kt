@@ -30,10 +30,10 @@ package com.tencent.bk.devops.atom.utils.script
 import com.tencent.bk.devops.atom.common.ErrorCode
 import com.tencent.bk.devops.atom.enums.CharsetType
 import com.tencent.bk.devops.atom.enums.OSType
+import com.tencent.bk.devops.atom.exception.AtomException
 import com.tencent.bk.devops.atom.pojo.AgentEnv
 import com.tencent.bk.devops.atom.utils.CommandLineUtils
 import com.tencent.bk.devops.atom.utils.CommonUtil
-import com.tencent.bk.devops.plugin.exception.TaskExecuteException
 import com.tencent.bk.devops.plugin.pojo.ErrorType
 import java.io.File
 import java.nio.charset.Charset
@@ -63,10 +63,8 @@ object ManualScriptUtil {
         val filePath = CommandLineUtils.getOutputMarcher(filePathRegex.matcher(startCommand))
         if (filePath.isNullOrBlank()) {
             logger.info("Please check whether your input meets the required format: [$startCommand]")
-            throw TaskExecuteException(
-                errorType = ErrorType.USER,
-                errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
-                errorMsg = "Please check whether your input meets the required format: [$startCommand]"
+            throw AtomException(
+                "Please check whether your input meets the required format: [$startCommand]"
             )
         }
         return executeUnixCommand(
@@ -139,15 +137,13 @@ object ManualScriptUtil {
                 executeErrorMessage = executeErrorMessage,
                 buildId = buildId
             )
-        } catch (taskError: TaskExecuteException) {
+        } catch (taskError: AtomException) {
             throw taskError
         } catch (ignored: Throwable) {
             val errorInfo = errorMessage ?: "Fail to run the command $command"
             logger.info("$errorInfo because of error(${ignored.message})")
-            throw TaskExecuteException(
-                errorType = ErrorType.USER,
-                errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
-                errorMsg = ignored.message ?: ""
+            throw AtomException(
+                ignored.message ?: ""
             )
         }
     }

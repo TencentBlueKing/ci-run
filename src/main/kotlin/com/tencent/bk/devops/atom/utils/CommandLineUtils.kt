@@ -167,10 +167,8 @@ object CommandLineUtils {
         }
         if (exitCode != 0) {
             /*执行返回码，非零表示执行出错，这时直接抛错。为用户自己的脚本问题*/
-            throw TaskExecuteException(
-                    errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
-                    errorType = ErrorType.USER,
-                    errorMsg = "$prefix Script command execution failed with exit code($exitCode) \n" +
+            throw AtomException(
+                    "$prefix Script command execution failed with exit code($exitCode) \n" +
                             "Error message tracking:\n" +
                             errString.joinToString("")
             )
