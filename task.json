@@ -4,7 +4,7 @@
   "execution": {
     "packagePath": "run-jar-with-dependencies.jar",
     "language": "java",
-    "minimumVersion": "17",
+    "runtimeVersion": "17",
     "demands": [],
     "target": "java -jar run-jar-with-dependencies.jar"
   },
