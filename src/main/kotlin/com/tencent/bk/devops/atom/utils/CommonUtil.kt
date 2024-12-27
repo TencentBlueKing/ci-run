@@ -31,9 +31,7 @@ import java.io.File
 import java.nio.charset.Charset
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.security.AccessController
 import org.slf4j.LoggerFactory
-import sun.security.action.GetPropertyAction
 
 object CommonUtil {
 
@@ -84,5 +82,5 @@ object CommonUtil {
         return value.replace("""'""", """'\''""")
     }
 
-    fun getTmpDir(): Path = Paths.get(AccessController.doPrivileged(GetPropertyAction("user.dir")))
+    fun getTmpDir(): Path = Paths.get(System.getProperty("user.dir"))
 }
