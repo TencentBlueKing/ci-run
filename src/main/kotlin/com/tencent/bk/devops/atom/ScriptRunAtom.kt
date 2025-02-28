@@ -24,7 +24,6 @@ import com.tencent.bk.devops.atom.spi.AtomService
 import com.tencent.bk.devops.atom.spi.TaskAtom
 import com.tencent.bk.devops.atom.utils.CommandLineUtils
 import com.tencent.bk.devops.atom.utils.I18nUtil
-import com.tencent.bk.devops.atom.utils.MessageUtil
 import com.tencent.bk.devops.atom.utils.ScriptEnvUtils
 import com.tencent.bk.devops.atom.utils.script.BashUtil
 import com.tencent.bk.devops.atom.utils.script.BatScriptUtil
@@ -50,13 +49,21 @@ class ScriptRunAtom : TaskAtom<ScriptRunAtomParam> {
 
     private val qualityApi = QualityApi()
 
-    private val USER_ERROR_MESSAGE = """
+    private val USER_ERROR_MESSAGE_EN = """
 ====== Script Execution Failed, Troubleshooting Guide ======
 
 When the script exit code is non-zero, it indicates that the execution has failed. You can analyze it from the following paths:
   1. Troubleshoot based on error logs.
   2. Manually execute the script locally. If it also fails locally, it is likely to be a script logic issue. 
 If it succeeds locally, troubleshoot the build environment (such as environment dependencies or code changes, etc.).
+    """
+
+    private val USER_ERROR_MESSAGE_CN = """
+======脚本执行失败,问题排查指引======
+当脚本退出码非0时，执行失败。可以从以下路径进行分析：
+1. 根据错误日志排查
+2. 在本地手动执行脚本。如果本地执行也失败，很可能是脚本逻辑问题；
+如果本地OK，排查构建环境（比如环境依赖、或者代码变更等）
     """
 
     override fun execute(atomContext: AtomContext<ScriptRunAtomParam>) {
@@ -200,13 +207,14 @@ If it succeeds locally, troubleshoot the build environment (such as environment 
             } catch (taskError: AtomException) {
                 /*处理普通异常，这里是脚本逻辑抛出的异常*/
                 logger.warn("Fail to run the script task")
+                logger.warn("taskError|${taskError.message}", taskError)
                 result.status = Status.failure
                 result.message = "$osType script execution failed"
-                val mes = MessageUtil.getMessageByLocale(
-                    ErrorCode.USER_ERROR_MESSAGE,
-                    I18nUtil.getLanguage(),
-                    USER_ERROR_MESSAGE
-                )
+                val mes = if (I18nUtil.getLanguage() == "zh_CN") {
+                    USER_ERROR_MESSAGE_CN
+                } else {
+                    USER_ERROR_MESSAGE_EN
+                }
                 /*返回失败以及对应的异常类型*/
                 throw AtomException(
                     taskError.message + "\n${URLDecoder.decode(mes, Charsets.UTF_8.name())}"
@@ -214,15 +222,15 @@ If it succeeds locally, troubleshoot the build environment (such as environment 
             } catch (ignore: Throwable) {
                 /*处理意外发生的异常，全局捕获*/
                 logger.warn("Fail to run the script task")
-                logger.debug("Throwable|${ignore.message}", ignore)
+                logger.warn("Throwable|${ignore.message}", ignore)
                 result.status = Status.failure
                 result.message = "$osType script execution failed"
                 /*返回user类型错误，一般用户使用错误会引起这种情况*/
-                val mes = MessageUtil.getMessageByLocale(
-                    ErrorCode.USER_ERROR_MESSAGE,
-                    I18nUtil.getLanguage(),
-                    USER_ERROR_MESSAGE
-                )
+                val mes = if (I18nUtil.getLanguage() == "zh_CN") {
+                    USER_ERROR_MESSAGE_CN
+                } else {
+                    USER_ERROR_MESSAGE_EN
+                }
                 throw AtomException(
                     URLDecoder.decode(mes, Charsets.UTF_8.name())
                 )
